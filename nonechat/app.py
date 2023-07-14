@@ -1,21 +1,21 @@
 import contextlib
 from datetime import datetime
-from typing import Any, Dict, Optional, TextIO, cast, Type
+from typing import Any, Dict, Type, TextIO, Optional, cast
 
 from textual.app import App
-from textual.binding import Binding
 from textual.widgets import Input
+from textual.binding import Binding
 
+from .backend import Backend
+from .storage import Storage
+from .router import RouterView
+from .log_redirect import FakeIO
+from .setting import ConsoleSetting
+from .views.log_view import LogView
 from .components.footer import Footer
 from .components.header import Header
 from .info import Event, MessageEvent
-from .log_redirect import FakeIO
-from .router import RouterView
-from .storage import Storage
 from .views.horizontal import HorizontalView
-from .views.log_view import LogView
-from .backend import Backend
-from .setting import ConsoleSetting
 
 
 class Frontend(App):
@@ -29,9 +29,7 @@ class Frontend(App):
     ROUTES = {"main": lambda: HorizontalView(), "log": lambda: LogView()}
 
     def __init__(
-        self,
-        backend: Type[Backend],
-        setting: ConsoleSetting = ConsoleSetting()
+        self, backend: Type[Backend], setting: ConsoleSetting = ConsoleSetting()
     ):
         super().__init__()
         self.backend = backend(self)
@@ -43,7 +41,6 @@ class Frontend(App):
         self._fake_output = cast(TextIO, FakeIO(self.storage))
         self._redirect_stdout: Optional[contextlib.redirect_stdout[TextIO]] = None
         self._redirect_stderr: Optional[contextlib.redirect_stderr[TextIO]] = None
-
 
     def compose(self):
         yield Header()
@@ -100,4 +97,3 @@ class Frontend(App):
 
     async def action_post_event(self, event: Event):
         await self.backend.post_event(event)
-

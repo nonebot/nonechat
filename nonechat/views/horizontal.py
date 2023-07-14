@@ -1,7 +1,8 @@
+from typing import TYPE_CHECKING, cast
+
 from textual.events import Resize
 from textual.widget import Widget
 from textual.reactive import Reactive
-from typing import TYPE_CHECKING, cast
 
 from ..components.log import LogPanel
 from ..components.chatroom import ChatRoom

@@ -1,17 +1,15 @@
-from typing import Iterator, Sequence, overload
-
-from rich.segment import Segment
 from abc import ABC, abstractmethod
-from typing import Union, Optional
-from dataclasses import dataclass, field, asdict
+from dataclasses import field, asdict, dataclass
+from typing import Union, Iterator, Optional, Sequence, overload
 
-from rich.console import Console, ConsoleOptions, JustifyMethod, RenderResult
-from rich.emoji import Emoji as RichEmoji
+from rich.style import Style
+from rich.segment import Segment
 from rich.emoji import EmojiVariant
+from rich.text import Text as RichText
+from rich.emoji import Emoji as RichEmoji
 from rich.markdown import Markdown as RichMarkdown
 from rich.measure import Measurement, measure_renderables
-from rich.style import Style
-from rich.text import Text as RichText
+from rich.console import Console, RenderResult, JustifyMethod, ConsoleOptions
 
 
 class Element(ABC):
@@ -24,12 +22,12 @@ class Element(ABC):
         return str(self.rich)
 
     def __rich_console__(
-            self, console: "Console", options: "ConsoleOptions"
+        self, console: "Console", options: "ConsoleOptions"
     ) -> "RenderResult":
         yield self.rich
 
     def __rich_measure__(
-            self, console: "Console", options: "ConsoleOptions"
+        self, console: "Console", options: "ConsoleOptions"
     ) -> Measurement:
         return measure_renderables(console, options, (self.rich,))
 
@@ -105,12 +103,16 @@ class Markdown(Element):
 
 class ConsoleMessage(Sequence[Element]):
     @overload
-    def __getitem__(self, index: int) -> Element: ...
+    def __getitem__(self, index: int) -> Element:
+        ...
 
     @overload
-    def __getitem__(self, index: slice) -> Sequence[Element]: ...
+    def __getitem__(self, index: slice) -> Sequence[Element]:
+        ...
 
-    def __getitem__(self, index: Union[int, slice]) -> Union[Element, Sequence[Element]]:
+    def __getitem__(
+        self, index: Union[int, slice]
+    ) -> Union[Element, Sequence[Element]]:
         return self.content[index]
 
     def __len__(self) -> int:
@@ -130,7 +132,7 @@ class ConsoleMessage(Sequence[Element]):
     def __iter__(self) -> Iterator[Element]:
         yield from self.content
 
-    def __reversed__(self)-> Iterator[Element]:
+    def __reversed__(self) -> Iterator[Element]:
         yield from reversed(self.content)
 
     def __rich_console__(

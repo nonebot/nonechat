@@ -1,9 +1,12 @@
-from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
-from .info import Event, MessageEvent, User
+from abc import ABC, abstractmethod
+
+from .info import User, Event, MessageEvent
 
 if TYPE_CHECKING:
     from .app import Frontend
+
+
 class Backend(ABC):
     frontend: "Frontend"
 

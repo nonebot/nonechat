@@ -1,9 +1,9 @@
 from textual.widget import Widget
 from textual.widgets import Static
 
-from ...setting import ConsoleSetting
 from ...router import RouteChange
 from ..general.action import Action
+from ...setting import ConsoleSetting
 
 
 class Toolbar(Widget):

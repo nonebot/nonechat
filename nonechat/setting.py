@@ -1,5 +1,6 @@
-from dataclasses import dataclass
 from typing import Optional
+from dataclasses import dataclass
+
 from textual.color import Color
 
 

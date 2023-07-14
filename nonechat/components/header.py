@@ -1,12 +1,15 @@
-from textual.widgets import Header as TextualHeader
-from textual.widgets._header import HeaderIcon, HeaderTitle, HeaderClock
 from typing import TYPE_CHECKING, cast
+
+from textual.widgets import Header as TextualHeader
+from textual.widgets._header import HeaderIcon, HeaderClock, HeaderTitle
+
 from ..setting import ConsoleSetting
 
 if TYPE_CHECKING:
     from ..app import Frontend
-class _Icon(HeaderIcon):
 
+
+class _Icon(HeaderIcon):
     def __init__(self, setting: ConsoleSetting):
         super().__init__()
         if setting.icon:
@@ -14,8 +17,8 @@ class _Icon(HeaderIcon):
         if setting.icon_color:
             self.styles.color = setting.icon_color
 
-class _Title(HeaderTitle):
 
+class _Title(HeaderTitle):
     def __init__(self, setting: ConsoleSetting):
         super().__init__()
         if setting.title_color:
@@ -33,6 +36,7 @@ class Header(TextualHeader):
         setting = self.app.setting
         if setting.header_color:
             self.styles.background = setting.header_color
+
     @property
     def app(self) -> "Frontend":
         return cast("Frontend", super().app)

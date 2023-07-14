@@ -1,6 +1,8 @@
-from dataclasses import dataclass, field
 from datetime import datetime
+from dataclasses import field, dataclass
+
 from .message import ConsoleMessage
+
 
 @dataclass(frozen=True, eq=True)
 class User:

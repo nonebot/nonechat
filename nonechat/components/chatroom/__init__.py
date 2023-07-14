@@ -1,6 +1,7 @@
+from typing import TYPE_CHECKING, cast
+
 from textual.widget import Widget
 from textual.binding import Binding
-from typing import TYPE_CHECKING, cast
 
 from .input import InputBox
 from .toolbar import Toolbar
