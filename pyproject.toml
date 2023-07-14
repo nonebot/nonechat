@@ -4,23 +4,30 @@ name = "nonechat"
 version = "0.1.0"
 description = "Awesome console using Textual"
 authors = [
-    {name = "RF-Tar-Railt", email = "rf_tar_railt@qq.com"},
+  {name = "RF-Tar-Railt", email = "rf_tar_railt@qq.com"},
 ]
 dependencies = [
-    "textual>=0.29.0",
+  "textual>=0.29.0",
 ]
 requires-python = ">=3.9"
 readme = "README.md"
 license = {text = "MIT"}
 
-[build-system]
-requires = ["pdm-backend"]
-build-backend = "pdm.backend"
-
 [tool.pdm.dev-dependencies]
 dev = [
-    "loguru>=0.7.0",
+  "loguru>=0.7.0",
 ]
 
 [tool.pdm.build]
 includes = ["nonechat"]
+
+[tool.ruff]
+select = ["E", "W", "F", "UP", "C", "T", "PYI", "PT", "Q"]
+ignore = ["C901"]
+
+line-length = 88
+target-version = "py38"
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
