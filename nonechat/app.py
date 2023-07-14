@@ -1,6 +1,6 @@
 import contextlib
 from datetime import datetime
-from typing import Any, Dict, Type, TextIO, Optional, cast
+from typing import Any, Dict, Type, TextIO, Generic, TypeVar, Optional, cast
 
 from textual.app import App
 from textual.widgets import Input
@@ -17,8 +17,10 @@ from .components.header import Header
 from .info import Event, MessageEvent
 from .views.horizontal import HorizontalView
 
+TB = TypeVar("TB", bound=Backend)
 
-class Frontend(App):
+
+class Frontend(App, Generic[TB]):
     BINDINGS = [
         Binding("ctrl+q", "quit", "Quit", show=False, priority=True),
         Binding("ctrl+d", "toggle_dark", "Toggle dark mode"),
@@ -28,11 +30,9 @@ class Frontend(App):
 
     ROUTES = {"main": lambda: HorizontalView(), "log": lambda: LogView()}
 
-    def __init__(
-        self, backend: Type[Backend], setting: ConsoleSetting = ConsoleSetting()
-    ):
+    def __init__(self, backend: Type[TB], setting: ConsoleSetting = ConsoleSetting()):
         super().__init__()
-        self.backend = backend(self)
+        self.backend: TB = backend(self)
         self.setting = setting
         self.title = setting.title  # type: ignore
         self.sub_title = setting.sub_title  # type: ignore

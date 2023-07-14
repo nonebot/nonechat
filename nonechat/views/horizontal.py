@@ -28,7 +28,7 @@ class HorizontalView(Widget):
     HorizontalView > .-w-50 {
         width: 50% !important;
     }
-    
+
     HorizontalView > LogPanel {
         border-left: solid rgba(204, 204, 204, 0.7);
     }
