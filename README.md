@@ -5,11 +5,12 @@
 ## 使用
 
 ```python
-from console.app import Frontend
-from console.backend import Backend
-from console.info import User, MessageEvent, Event
-from console.message import ConsoleMessage, Text
+from nonechat.app import Frontend
+from nonechat.backend import Backend
+from nonechat.info import User, MessageEvent, Event
+from nonechat.message import ConsoleMessage, Text
 from datetime import datetime
+
 
 class ExampleBackend(Backend):
 
@@ -36,6 +37,7 @@ class ExampleBackend(Backend):
 
     async def post_event(self, event: Event):
         print("post_event")
+
 
 app = Frontend(ExampleBackend)
 app.run()

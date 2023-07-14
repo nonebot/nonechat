@@ -1,7 +1,7 @@
-from console.app import Frontend
-from console.backend import Backend
-from console.info import User, MessageEvent, Event, Robot
-from console.message import ConsoleMessage, Text
+from nonechat.app import Frontend
+from nonechat.backend import Backend
+from nonechat.info import User, MessageEvent, Event, Robot
+from nonechat.message import ConsoleMessage, Text
 from datetime import datetime
 from asyncio import gather, create_task
 from loguru import logger

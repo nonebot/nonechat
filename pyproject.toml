@@ -21,3 +21,6 @@ build-backend = "pdm.backend"
 dev = [
     "loguru>=0.7.0",
 ]
+
+[tool.pdm.build]
+includes = ["nonechat"]
