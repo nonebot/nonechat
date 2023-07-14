@@ -1,7 +1,7 @@
 
 [project]
 name = "nonechat"
-version = "0.1.0"
+version = "0.1.1"
 description = "Awesome chat console using Textual"
 authors = [
   {name = "RF-Tar-Railt", email = "rf_tar_railt@qq.com"},
