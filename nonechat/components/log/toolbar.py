@@ -1,6 +1,7 @@
 from textual.widget import Widget
 from textual.widgets import Static
 
+from ...setting import ConsoleSetting
 from ...router import RouteChange
 from ..general.action import Action
 
@@ -32,7 +33,7 @@ class Toolbar(Widget):
     }
     """
 
-    def __init__(self):
+    def __init__(self, settings: ConsoleSetting):
         super().__init__()
         self.exit_button = Action("⛔", id="exit", classes="left")
         self.back_button = Action("⏪", id="back", classes="left ml")

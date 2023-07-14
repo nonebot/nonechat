@@ -1,9 +1,13 @@
 from textual.widget import Widget
 from textual.binding import Binding
+from typing import TYPE_CHECKING, cast
 
 from .input import InputBox
 from .toolbar import Toolbar
 from .history import ChatHistory
+
+if TYPE_CHECKING:
+    from ..app import Frontend
 
 
 class ChatRoom(Widget):
@@ -26,9 +30,13 @@ class ChatRoom(Widget):
         self.history = ChatHistory()
 
     def compose(self):
-        yield Toolbar()
+        yield Toolbar(self.app.setting)
         yield self.history
         yield InputBox()
 
     def action_clear_history(self):
         self.history.action_clear_history()
+
+    @property
+    def app(self) -> "Frontend":
+        return cast("Frontend", super().app)

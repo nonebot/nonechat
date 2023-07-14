@@ -7,6 +7,7 @@ from rich.console import RenderableType
 
 if TYPE_CHECKING:
     from ...app import Frontend
+    from ...setting import ConsoleSetting
     from ...storage import Storage, StateChange
 
 
@@ -17,20 +18,21 @@ class LogPanel(Widget):
     DEFAULT_CSS = """
     LogPanel {
         layout: vertical;
-        background: rgba(40, 44, 52, 1);
     }
     LogPanel > TextLog {
         padding: 0 1;
-        background: rgba(40, 44, 52, 1);
         min-width: 60 !important;
         scrollbar-size-vertical: 1;
     }
     """
 
-    def __init__(self) -> None:
+    def __init__(self, setting: "ConsoleSetting") -> None:
         super().__init__()
 
         self.output = TextLog(max_lines=MAX_LINES, min_width=60, wrap=True, markup=True)
+        if setting.bg_color:
+            self.styles.background = setting.bg_color
+            self.output.styles.background = setting.bg_color
 
     @property
     def storage(self) -> "Storage":

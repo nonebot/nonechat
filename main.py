@@ -5,9 +5,11 @@ from asyncio import gather, create_task
 from loguru import logger
 
 from nonechat.app import Frontend
+from nonechat.setting import ConsoleSetting
 from nonechat.backend import Backend
 from nonechat.message import Text, ConsoleMessage
 from nonechat.info import User, Event, Robot, MessageEvent
+from textual.color import Color
 
 class ExampleBackend(Backend):
     callbacks = []
@@ -66,7 +68,19 @@ class ExampleBackend(Backend):
             return func
         return wrapper
 
-app = Frontend(ExampleBackend)
+app = Frontend(
+    ExampleBackend,
+    ConsoleSetting(
+        title="Test",
+        sub_title="This is a test.",
+        room_title="Room",
+        icon="🤖",
+        bg_color=Color(40, 44, 52),
+        title_color=Color(229, 192, 123),
+        header_color=Color(90, 99, 108, 0.6),
+        icon_color=Color.parse("#22b14c"),
+    )
+)
 
 async def send_message(message: ConsoleMessage):
     await app.call("send_msg", {

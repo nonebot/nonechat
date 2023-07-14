@@ -8,6 +8,7 @@ from ..general.action import Action
 
 if TYPE_CHECKING:
     from .history import ChatHistory
+    from ...setting import ConsoleSetting
     from ...views.horizontal import HorizontalView
 
 
@@ -41,11 +42,11 @@ class Toolbar(Widget):
     }
     """
 
-    def __init__(self):
+    def __init__(self, setting: "ConsoleSetting"):
         super().__init__()
         self.exit_button = Action("⛔", id="exit", classes="left")
         self.clear_button = Action("🗑️", id="clear", classes="left ml")
-        self.center_title = Static("Chat", classes="center")
+        self.center_title = Static(setting.room_title, classes="center")
         self.settings_button = Action("⚙️", id="settings", classes="right mr")
         self.log_button = Action("📝", id="log", classes="right")
 

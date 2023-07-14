@@ -1,9 +1,13 @@
 from textual.events import Resize
 from textual.widget import Widget
 from textual.reactive import Reactive
+from typing import TYPE_CHECKING, cast
 
 from ..components.log import LogPanel
 from ..components.chatroom import ChatRoom
+
+if TYPE_CHECKING:
+    from ..app import Frontend
 
 SHOW_LOG_BREAKPOINT = 120
 
@@ -14,7 +18,6 @@ class HorizontalView(Widget):
         layout: horizontal;
         height: 100%;
         width: 100%;
-        background: rgba(40, 44, 52, 1);
     }
 
     HorizontalView > * {
@@ -35,8 +38,15 @@ class HorizontalView(Widget):
 
     def __init__(self):
         super().__init__()
+        setting = self.app.setting
         self.chatroom = ChatRoom()
-        self.log_panel = LogPanel()
+        self.log_panel = LogPanel(setting)
+        if setting.bg_color:
+            self.styles.background = setting.bg_color
+
+    @property
+    def app(self) -> "Frontend":
+        return cast("Frontend", super().app)
 
     def compose(self):
         yield self.chatroom

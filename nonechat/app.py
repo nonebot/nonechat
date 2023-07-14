@@ -1,6 +1,6 @@
 import contextlib
 from datetime import datetime
-from typing import Any, Dict, Optional, TextIO, cast
+from typing import Any, Dict, Optional, TextIO, cast, Type
 
 from textual.app import App
 from textual.binding import Binding
@@ -15,6 +15,7 @@ from .storage import Storage
 from .views.horizontal import HorizontalView
 from .views.log_view import LogView
 from .backend import Backend
+from .setting import ConsoleSetting
 
 
 class Frontend(App):
@@ -29,14 +30,14 @@ class Frontend(App):
 
     def __init__(
         self,
-        backend: type[Backend],
-        title: str = "Console",
-        sub_title: str = "powered by Textual"
+        backend: Type[Backend],
+        setting: ConsoleSetting = ConsoleSetting()
     ):
         super().__init__()
         self.backend = backend(self)
-        self.title = title  # type: ignore
-        self.sub_title = sub_title  # type: ignore
+        self.setting = setting
+        self.title = setting.title  # type: ignore
+        self.sub_title = setting.sub_title  # type: ignore
         self.storage = Storage()
         self.backend.on_console_init()
         self._fake_output = cast(TextIO, FakeIO(self.storage))
