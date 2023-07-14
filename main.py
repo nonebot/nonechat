@@ -3,13 +3,14 @@ from datetime import datetime
 from asyncio import gather, create_task
 
 from loguru import logger
+from textual.color import Color
 
 from nonechat.app import Frontend
-from nonechat.setting import ConsoleSetting
 from nonechat.backend import Backend
+from nonechat.setting import ConsoleSetting
 from nonechat.message import Text, ConsoleMessage
 from nonechat.info import User, Event, Robot, MessageEvent
-from textual.color import Color
+
 
 class ExampleBackend(Backend):
     callbacks = []
@@ -26,9 +27,7 @@ class ExampleBackend(Backend):
         print("on_console_load")
         logger.remove()
         self._logger_id = logger.add(
-            self.frontend._fake_output,
-            level=0,
-            diagnose=False
+            self.frontend._fake_output, level=0, diagnose=False
         )
 
     def on_console_mount(self):
@@ -54,7 +53,7 @@ class ExampleBackend(Backend):
             self_id="robot",
             type="console.message",
             user=user,
-            message=ConsoleMessage([Text(message)])
+            message=ConsoleMessage([Text(message)]),
         )
 
     async def post_event(self, event: Event):
@@ -66,7 +65,9 @@ class ExampleBackend(Backend):
         def wrapper(func):
             self.callbacks.append(func)
             return func
+
         return wrapper
+
 
 app = Frontend(
     ExampleBackend,
@@ -79,18 +80,18 @@ app = Frontend(
         title_color=Color(229, 192, 123),
         header_color=Color(90, 99, 108, 0.6),
         icon_color=Color.parse("#22b14c"),
-    )
+    ),
 )
 
+
 async def send_message(message: ConsoleMessage):
-    await app.call("send_msg", {
-        "message": message,
-        "info": Robot("robot")
-    })
+    await app.call("send_msg", {"message": message, "info": Robot("robot")})
+
 
 @app.backend.register()
 async def on_message(event: MessageEvent):
     if str(event.message) == "ping":
         await send_message(ConsoleMessage([Text("pong!")]))
+
 
 app.run()
