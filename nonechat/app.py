@@ -14,7 +14,8 @@ from .setting import ConsoleSetting
 from .views.log_view import LogView
 from .components.footer import Footer
 from .components.header import Header
-from .info import Event, MessageEvent
+from .message import Text, ConsoleMessage
+from .info import User, Event, MessageEvent
 from .views.horizontal import HorizontalView
 
 TB = TypeVar("TB", bound=Backend)
@@ -32,15 +33,14 @@ class Frontend(App, Generic[TB]):
 
     def __init__(self, backend: Type[TB], setting: ConsoleSetting = ConsoleSetting()):
         super().__init__()
-        self.backend: TB = backend(self)
         self.setting = setting
         self.title = setting.title  # type: ignore
         self.sub_title = setting.sub_title  # type: ignore
-        self.storage = Storage()
-        self.backend.on_console_init()
+        self.storage = Storage(User("console", setting.user_avatar, setting.user_name))
         self._fake_output = cast(TextIO, FakeIO(self.storage))
         self._redirect_stdout: Optional[contextlib.redirect_stdout[TextIO]] = None
         self._redirect_stderr: Optional[contextlib.redirect_stderr[TextIO]] = None
+        self.backend: TB = backend(self)
 
     def compose(self):
         yield Header()
@@ -78,9 +78,9 @@ class Frontend(App, Generic[TB]):
                 MessageEvent(
                     type="console.message",
                     time=datetime.now(),
-                    self_id=data["info"].id,
+                    self_id=self.backend.bot.id,
                     message=data["message"],
-                    user=data["info"],
+                    user=self.backend.bot,
                 )
             )
         elif api == "bell":
@@ -91,7 +91,13 @@ class Frontend(App, Generic[TB]):
             self.query_one(Input).focus()
 
     async def action_post_message(self, message: str):
-        msg = await self.backend.build_message_event(message, self.storage.current_user)
+        msg = MessageEvent(
+            time=datetime.now(),
+            self_id=self.backend.bot.id,
+            type="console.message",
+            user=self.storage.current_user,
+            message=ConsoleMessage([Text(message)]),
+        )
         self.storage.write_chat(msg)
         await self.backend.post_event(msg)
 

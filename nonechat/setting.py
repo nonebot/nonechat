@@ -14,3 +14,12 @@ class ConsoleSetting:
     icon_color: Optional[Color] = None
     bg_color: Optional[Color] = None
     header_color: Optional[Color] = None
+    toolbar_exit: str = "⛔"
+    toolbar_clear: str = "🗑️"
+    toolbar_setting: str = "⚙️"
+    toolbar_log: str = "📝"
+    toolbar_back: str = "⏪"
+    user_avatar: str = "👤"
+    user_name: str = "User"
+    bot_avatar: str = "🤖"
+    bot_name: str = "Bot"

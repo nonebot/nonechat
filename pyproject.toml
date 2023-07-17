@@ -1,7 +1,5 @@
-
 [project]
 name = "nonechat"
-version = "0.1.2"
 description = "Awesome chat console using Textual"
 authors = [
   {name = "RF-Tar-Railt", email = "rf_tar_railt@qq.com"},
@@ -12,6 +10,7 @@ dependencies = [
 requires-python = ">=3.8, <4.0"
 readme = "README.md"
 license = {text = "MIT"}
+dynamic = ["version"]
 
 [project.urls]
 homepage = "https://github.com/nonebot/nonechat"
@@ -29,6 +28,10 @@ dev = [
 
 [tool.pdm.build]
 includes = ["nonechat"]
+
+[tool.pdm.version]
+source = "file"
+path = "nonechat/__init__.py"
 
 [tool.black]
 line-length = 88

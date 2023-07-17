@@ -19,19 +19,19 @@ repos:
       - id: isort
         stages: [commit]
 
-  - repo: https://github.com/psf/black
+  - repo: https://ghproxy.com/github.com/psf/black
     rev: 23.3.0
     hooks:
       - id: black
         stages: [commit]
 
-  - repo: https://github.com/pre-commit/mirrors-prettier
+  - repo: https://ghproxy.com/github.com/pre-commit/mirrors-prettier
     rev: v3.0.0-alpha.9-for-vscode
     hooks:
       - id: prettier
         stages: [commit]
 
-  - repo: https://github.com/nonebot/nonemoji
+  - repo: https://ghproxy.com/github.com/nonebot/nonemoji
     rev: v0.1.4
     hooks:
       - id: nonemoji

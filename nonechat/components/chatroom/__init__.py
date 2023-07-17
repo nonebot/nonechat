@@ -8,7 +8,7 @@ from .toolbar import Toolbar
 from .history import ChatHistory
 
 if TYPE_CHECKING:
-    from ..app import Frontend
+    from ...app import Frontend
 
 
 class ChatRoom(Widget):

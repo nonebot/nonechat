@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING, cast
 from textual.widget import Widget
 from textual.widgets import Static
 
+from ..action import Action
 from ...router import RouteChange
-from ..general.action import Action
 
 if TYPE_CHECKING:
     from .history import ChatHistory
@@ -44,11 +44,13 @@ class Toolbar(Widget):
 
     def __init__(self, setting: "ConsoleSetting"):
         super().__init__()
-        self.exit_button = Action("⛔", id="exit", classes="left")
-        self.clear_button = Action("🗑️", id="clear", classes="left ml")
+        self.exit_button = Action(setting.toolbar_exit, id="exit", classes="left")
+        self.clear_button = Action(setting.toolbar_clear, id="clear", classes="left ml")
         self.center_title = Static(setting.room_title, classes="center")
-        self.settings_button = Action("⚙️", id="settings", classes="right mr")
-        self.log_button = Action("📝", id="log", classes="right")
+        self.settings_button = Action(
+            setting.toolbar_setting, id="settings", classes="right mr"
+        )
+        self.log_button = Action(setting.toolbar_log, id="log", classes="right")
 
     def compose(self):
         yield self.exit_button
@@ -64,12 +66,16 @@ class Toolbar(Widget):
         if event.action == self.exit_button:
             self.app.exit()
         elif event.action == self.clear_button:
-            history = cast("ChatHistory", self.app.query_one("ChatHistory"))
+            history: "ChatHistory" = cast(
+                "ChatHistory", self.app.query_one("ChatHistory")
+            )
             history.action_clear_history()
         elif event.action == self.settings_button:
             ...
         elif event.action == self.log_button:
-            view = cast("HorizontalView", self.app.query_one("HorizontalView"))
+            view: "HorizontalView" = cast(
+                "HorizontalView", self.app.query_one("HorizontalView")
+            )
             if view.can_show_log:
                 view.action_toggle_log_panel()
             else:

@@ -22,7 +22,7 @@ class StateChange(Message, Generic[T], bubble=False):
 
 @dataclass
 class Storage:
-    current_user: User = field(default_factory=lambda: User(id="console"))
+    current_user: User
 
     log_history: List[RenderableType] = field(default_factory=list)
     log_watchers: List[Widget] = field(default_factory=list)

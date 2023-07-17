@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 from abc import ABC, abstractmethod
 
-from .info import User, Event, MessageEvent
+from .info import Event, Robot
 
 if TYPE_CHECKING:
     from .app import Frontend
@@ -12,10 +12,9 @@ class Backend(ABC):
 
     def __init__(self, frontend: "Frontend"):
         self.frontend = frontend
-
-    @abstractmethod
-    def on_console_init(self):
-        ...
+        self.bot = Robot(
+            "robot", self.frontend.setting.bot_avatar, self.frontend.setting.bot_name
+        )
 
     @abstractmethod
     def on_console_load(self):
@@ -27,10 +26,6 @@ class Backend(ABC):
 
     @abstractmethod
     def on_console_unmount(self):
-        ...
-
-    @abstractmethod
-    async def build_message_event(self, message: str, user: User) -> MessageEvent:
         ...
 
     @abstractmethod

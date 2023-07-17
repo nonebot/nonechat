@@ -1,5 +1,4 @@
 import sys
-from datetime import datetime
 from asyncio import gather, create_task
 
 from loguru import logger
@@ -9,7 +8,7 @@ from nonechat.app import Frontend
 from nonechat.backend import Backend
 from nonechat.setting import ConsoleSetting
 from nonechat.message import Text, ConsoleMessage
-from nonechat.info import User, Event, Robot, MessageEvent
+from nonechat.info import Event, Robot, MessageEvent
 
 
 class ExampleBackend(Backend):
@@ -19,9 +18,6 @@ class ExampleBackend(Backend):
         super().__init__(frontend)
         self._stderr = sys.stderr
         self._logger_id = None
-
-    def on_console_init(self):
-        print("on_console_init")
 
     def on_console_load(self):
         print("on_console_load")
@@ -47,15 +43,6 @@ class ExampleBackend(Backend):
         # logger.success("Console exit.")
         # logger.warning("Press Ctrl-C for Application exit")
 
-    async def build_message_event(self, message: str, user: User) -> MessageEvent:
-        return MessageEvent(
-            time=datetime.now(),
-            self_id="robot",
-            type="console.message",
-            user=user,
-            message=ConsoleMessage([Text(message)]),
-        )
-
     async def post_event(self, event: Event):
         print("post_event")
         if isinstance(event, MessageEvent):
@@ -80,6 +67,8 @@ app = Frontend(
         title_color=Color(229, 192, 123),
         header_color=Color(90, 99, 108, 0.6),
         icon_color=Color.parse("#22b14c"),
+        toolbar_exit="❌",
+        bot_name="Nonebot",
     ),
 )
 
