@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import field, asdict, dataclass
-from typing import Union, Iterator, Optional, Sequence, overload
+from typing import Union, Iterator, Optional, Sequence, overload, List
 
 from rich.style import Style
 from rich.segment import Segment
@@ -118,12 +118,12 @@ class ConsoleMessage(Sequence[Element]):
     def __len__(self) -> int:
         return len(self.content)
 
-    content: list[Element]
+    content: List[Element]
 
-    def __init__(self, elements: list[Element]):
+    def __init__(self, elements: List[Element]):
         """从传入的序列(可以是元组 tuple, 也可以是列表 list) 创建消息链.
         Args:
-            elements (list[T]): 包含且仅包含消息元素的序列
+            elements (List[T]): 包含且仅包含消息元素的序列
         Returns:
             MessageChain: 以传入的序列作为所承载消息的消息链
         """
