@@ -58,3 +58,10 @@ target-version = "py38"
 [build-system]
 requires = ["pdm-backend"]
 build-backend = "pdm.backend"
+
+
+[tool.pyright]
+pythonVersion = "3.8"
+pythonPlatform = "All"
+
+reportShadowedImports = false
