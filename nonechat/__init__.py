@@ -7,4 +7,4 @@ from .message import Markdown as Markdown
 from .message import ConsoleMessage as ConsoleMessage
 from .setting import ConsoleSetting as ConsoleSetting
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
