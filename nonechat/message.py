@@ -145,7 +145,12 @@ class ConsoleMessage(Sequence[Element]):
     def __rich_measure__(
         self, console: "Console", options: "ConsoleOptions"
     ) -> Measurement:
-        return measure_renderables(console, options, self)
+        measurements = [
+            measure_renderables(console, options, (element,)) for element in self
+        ]
+        return Measurement(
+            sum(i.minimum for i in measurements), sum(i.maximum for i in measurements)
+        )
 
     def __str__(self):
         return "".join(map(str, self.content))
