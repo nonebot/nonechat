@@ -145,9 +145,7 @@ class ConsoleMessage(Sequence[Element]):
     def __rich_measure__(
         self, console: "Console", options: "ConsoleOptions"
     ) -> Measurement:
-        measurements = [
-            measure_renderables(console, options, (element,)) for element in self
-        ]
+        measurements = [Measurement.get(console, options, element) for element in self]
         return Measurement(
             sum(i.minimum for i in measurements), sum(i.maximum for i in measurements)
         )
