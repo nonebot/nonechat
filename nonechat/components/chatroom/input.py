@@ -54,7 +54,8 @@ class InputBox(Widget):
 
     async def on_input_submitted(self, event: Input.Submitted):
         event.stop()
-        print(self.input_history[len(self.input_history)-1], self.input_history)
+        if event.value == "":
+            return
         if self.input_history[len(self.input_history)-1] != event.value:
             self.input_history.append(event.value)
         self.history_index = len(self.input_history)
