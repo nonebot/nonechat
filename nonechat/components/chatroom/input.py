@@ -35,11 +35,15 @@ class InputBox(Widget):
 
     BINDINGS = [
         Binding("escape", "blur", "Reset focus", show=False),
+        Binding("up", "set_previous_input", "Set Previous Input"),
+        Binding("down", "set_next_input", "Set Next Input"),
     ]
 
     def __init__(self):
         super().__init__()
         self.input = Input(placeholder="Send Message")
+        self.input_history = ["None"]
+        self.history_index = 0
 
     @property
     def app(self) -> "Frontend":
@@ -50,8 +54,27 @@ class InputBox(Widget):
 
     async def on_input_submitted(self, event: Input.Submitted):
         event.stop()
+        if event.value == "":
+            return
+        if self.input_history[len(self.input_history) - 1] != event.value:
+            self.input_history.append(event.value)
+        self.history_index = len(self.input_history)
         self.input.value = ""
         await self.app.action_post_message(event.value)
 
     def action_blur(self):
         self.input.blur()
+
+    async def action_set_previous_input(self):
+        self.history_index -= 1
+        if self.history_index < 1:
+            self.history_index = 1
+        self.input.value = self.input_history[self.history_index]
+
+    async def action_set_next_input(self):
+        self.history_index += 1
+        if self.history_index >= len(self.input_history):
+            self.input.value = ""
+            self.history_index = len(self.input_history)
+            return
+        self.input.value = self.input_history[self.history_index]
