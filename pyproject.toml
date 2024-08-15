@@ -7,10 +7,10 @@ authors = [
 dependencies = [
     "textual>=0.76.0",
 ]
+version = "0.3.0"
 requires-python = ">=3.9, <4.0"
 readme = "README.md"
 license = {text = "MIT"}
-dynamic = ["version"]
 
 [project.urls]
 homepage = "https://github.com/nonebot/nonechat"
@@ -28,10 +28,6 @@ dev = [
 
 [tool.pdm.build]
 includes = ["nonechat"]
-
-[tool.pdm.version]
-source = "file"
-path = "nonechat/__init__.py"
 
 [tool.black]
 line-length = 110
