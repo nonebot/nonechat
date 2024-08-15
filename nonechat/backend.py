@@ -12,22 +12,16 @@ class Backend(ABC):
 
     def __init__(self, frontend: "Frontend"):
         self.frontend = frontend
-        self.bot = Robot(
-            "robot", self.frontend.setting.bot_avatar, self.frontend.setting.bot_name
-        )
+        self.bot = Robot("robot", self.frontend.setting.bot_avatar, self.frontend.setting.bot_name)
 
     @abstractmethod
-    def on_console_load(self):
-        ...
+    def on_console_load(self): ...
 
     @abstractmethod
-    def on_console_mount(self):
-        ...
+    def on_console_mount(self): ...
 
     @abstractmethod
-    def on_console_unmount(self):
-        ...
+    def on_console_unmount(self): ...
 
     @abstractmethod
-    async def post_event(self, event: Event):
-        ...
+    async def post_event(self, event: Event): ...

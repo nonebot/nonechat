@@ -22,9 +22,7 @@ class ExampleBackend(Backend):
     def on_console_load(self):
         print("on_console_load")
         logger.remove()
-        self._logger_id = logger.add(
-            self.frontend._fake_output, level=0, diagnose=False
-        )
+        self._logger_id = logger.add(self.frontend._fake_output, level=0, diagnose=False)
 
     def on_console_mount(self):
         print("on_console_mount")

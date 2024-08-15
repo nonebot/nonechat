@@ -47,9 +47,7 @@ class Toolbar(Widget):
         self.exit_button = Action(setting.toolbar_exit, id="exit", classes="left")
         self.clear_button = Action(setting.toolbar_clear, id="clear", classes="left ml")
         self.center_title = Static(setting.room_title, classes="center")
-        self.settings_button = Action(
-            setting.toolbar_setting, id="settings", classes="right mr"
-        )
+        self.settings_button = Action(setting.toolbar_setting, id="settings", classes="right mr")
         self.log_button = Action(setting.toolbar_log, id="log", classes="right")
 
     def compose(self):
@@ -66,16 +64,12 @@ class Toolbar(Widget):
         if event.action == self.exit_button:
             self.app.exit()
         elif event.action == self.clear_button:
-            history: "ChatHistory" = cast(
-                "ChatHistory", self.app.query_one("ChatHistory")
-            )
+            history: ChatHistory = cast("ChatHistory", self.app.query_one("ChatHistory"))
             history.action_clear_history()
         elif event.action == self.settings_button:
             ...
         elif event.action == self.log_button:
-            view: "HorizontalView" = cast(
-                "HorizontalView", self.app.query_one("HorizontalView")
-            )
+            view: HorizontalView = cast("HorizontalView", self.app.query_one("HorizontalView"))
             if view.can_show_log:
                 view.action_toggle_log_panel()
             else:

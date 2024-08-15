@@ -37,9 +37,7 @@ class Toolbar(Widget):
         super().__init__()
         self.exit_button = Action(settings.toolbar_exit, id="exit", classes="left")
         self.back_button = Action(settings.toolbar_back, id="back", classes="left ml")
-        self.settings_button = Action(
-            settings.toolbar_setting, id="settings", classes="right"
-        )
+        self.settings_button = Action(settings.toolbar_setting, id="settings", classes="right")
 
     def compose(self):
         yield self.exit_button

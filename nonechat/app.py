@@ -1,6 +1,6 @@
 import contextlib
 from datetime import datetime
-from typing import Any, Dict, Type, TextIO, Generic, TypeVar, Optional, cast
+from typing import Any, TextIO, Generic, TypeVar, Optional, cast
 
 from textual.app import App
 from textual.widgets import Input
@@ -31,7 +31,7 @@ class Frontend(App, Generic[TB]):
 
     ROUTES = {"main": lambda: HorizontalView(), "log": lambda: LogView()}
 
-    def __init__(self, backend: Type[TB], setting: ConsoleSetting = ConsoleSetting()):
+    def __init__(self, backend: type[TB], setting: ConsoleSetting = ConsoleSetting()):
         super().__init__()
         self.setting = setting
         self.title = setting.title  # type: ignore
@@ -72,7 +72,7 @@ class Frontend(App, Generic[TB]):
             self._redirect_stdout = None
         self.backend.on_console_unmount()
 
-    async def call(self, api: str, data: Dict[str, Any]):
+    async def call(self, api: str, data: dict[str, Any]):
         if api == "send_msg":
             self.storage.write_chat(
                 MessageEvent(

@@ -1,4 +1,5 @@
-from typing import TYPE_CHECKING, Tuple, Iterable, cast
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, cast
 
 from textual.widget import Widget
 from textual.events import Unmount
@@ -48,7 +49,7 @@ class LogPanel(Widget):
     def on_unmount(self, event: Unmount):
         self.storage.remove_log_watcher(self)
 
-    def on_state_change(self, event: "StateChange[Tuple[RenderableType, ...]]") -> None:
+    def on_state_change(self, event: "StateChange[tuple[RenderableType, ...]]") -> None:
         self.on_log(event.data)
 
     def on_log(self, logs: Iterable[RenderableType]) -> None:

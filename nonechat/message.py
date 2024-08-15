@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
+from typing import Union, Optional, overload
+from collections.abc import Iterator, Sequence
 from dataclasses import field, asdict, dataclass
-from typing import List, Union, Iterator, Optional, Sequence, overload
 
 from rich.style import Style
 from rich.segment import Segment
@@ -21,14 +22,10 @@ class Element(ABC):
     def __str__(self) -> str:
         return str(self.rich)
 
-    def __rich_console__(
-        self, console: "Console", options: "ConsoleOptions"
-    ) -> "RenderResult":
+    def __rich_console__(self, console: "Console", options: "ConsoleOptions") -> "RenderResult":
         yield self.rich
 
-    def __rich_measure__(
-        self, console: "Console", options: "ConsoleOptions"
-    ) -> Measurement:
+    def __rich_measure__(self, console: "Console", options: "ConsoleOptions") -> Measurement:
         return measure_renderables(console, options, (self.rich,))
 
 
@@ -103,24 +100,20 @@ class Markdown(Element):
 
 class ConsoleMessage(Sequence[Element]):
     @overload
-    def __getitem__(self, index: int) -> Element:
-        ...
+    def __getitem__(self, index: int) -> Element: ...
 
     @overload
-    def __getitem__(self, index: slice) -> Sequence[Element]:
-        ...
+    def __getitem__(self, index: slice) -> Sequence[Element]: ...
 
-    def __getitem__(
-        self, index: Union[int, slice]
-    ) -> Union[Element, Sequence[Element]]:
+    def __getitem__(self, index: Union[int, slice]) -> Union[Element, Sequence[Element]]:
         return self.content[index]
 
     def __len__(self) -> int:
         return len(self.content)
 
-    content: List[Element]
+    content: list[Element]
 
-    def __init__(self, elements: List[Element]):
+    def __init__(self, elements: list[Element]):
         """从传入的序列(可以是元组 tuple, 也可以是列表 list) 创建消息链.
         Args:
             elements (list[T]): 包含且仅包含消息元素的序列
@@ -135,20 +128,14 @@ class ConsoleMessage(Sequence[Element]):
     def __reversed__(self) -> Iterator[Element]:
         yield from reversed(self.content)
 
-    def __rich_console__(
-        self, console: "Console", options: "ConsoleOptions"
-    ) -> "RenderResult":
+    def __rich_console__(self, console: "Console", options: "ConsoleOptions") -> "RenderResult":
         yield from self
         if self.content and not isinstance(self.content[-1], Markdown):
             yield Segment("\n")
 
-    def __rich_measure__(
-        self, console: "Console", options: "ConsoleOptions"
-    ) -> Measurement:
+    def __rich_measure__(self, console: "Console", options: "ConsoleOptions") -> Measurement:
         measurements = [Measurement.get(console, options, element) for element in self]
-        return Measurement(
-            sum(i.minimum for i in measurements), sum(i.maximum for i in measurements)
-        )
+        return Measurement(sum(i.minimum for i in measurements), sum(i.maximum for i in measurements))
 
     def __str__(self):
         return "".join(map(str, self.content))

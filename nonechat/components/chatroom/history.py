@@ -1,5 +1,6 @@
+from collections.abc import Iterable
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Tuple, Iterable, Optional, cast
+from typing import TYPE_CHECKING, Optional, cast
 
 from textual.widget import Widget
 
@@ -23,7 +24,7 @@ class ChatHistory(Widget):
 
     def __init__(self):
         super().__init__()
-        self.last_msg: Optional["MessageEvent"] = None
+        self.last_msg: Optional[MessageEvent] = None
         self.last_time: Optional[datetime] = None
 
     @property
@@ -41,10 +42,7 @@ class ChatHistory(Widget):
         if (
             not self.last_time
             or message.time - self.last_time > timedelta(minutes=5)
-            or (
-                self.last_msg
-                and message.time - self.last_msg.time > timedelta(minutes=1)
-            )
+            or (self.last_msg and message.time - self.last_msg.time > timedelta(minutes=1))
         ):
             self.mount(Timer(message.time))  # noqa
             self.last_time = message.time
@@ -53,7 +51,7 @@ class ChatHistory(Widget):
 
         self.scroll_end()
 
-    async def on_state_change(self, event: "StateChange[Tuple[MessageEvent, ...]]"):
+    async def on_state_change(self, event: "StateChange[tuple[MessageEvent, ...]]"):
         await self.on_new_message(event.data)
 
     async def on_new_message(self, messages: Iterable["MessageEvent"]):

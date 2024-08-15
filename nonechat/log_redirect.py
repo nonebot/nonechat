@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 from rich.text import Text
 
@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 class FakeIO:
     def __init__(self, storage: "Storage") -> None:
         self.storage = storage
-        self._buffer: List[str] = []
+        self._buffer: list[str] = []
 
     def isatty(self):
         return True
@@ -32,6 +32,4 @@ class FakeIO:
         self._buffer.clear()
 
     def _write_to_storage(self) -> None:
-        self.storage.write_log(
-            Text.from_ansi("".join(self._buffer), end="", tab_size=4)
-        )
+        self.storage.write_log(Text.from_ansi("".join(self._buffer), end="", tab_size=4))

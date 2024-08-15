@@ -1,5 +1,5 @@
+from typing import Generic, TypeVar
 from dataclasses import field, dataclass
-from typing import List, Generic, TypeVar
 
 from textual.widget import Widget
 from textual.message import Message
@@ -24,11 +24,11 @@ class StateChange(Message, Generic[T], bubble=False):
 class Storage:
     current_user: User
 
-    log_history: List[RenderableType] = field(default_factory=list)
-    log_watchers: List[Widget] = field(default_factory=list)
+    log_history: list[RenderableType] = field(default_factory=list)
+    log_watchers: list[Widget] = field(default_factory=list)
 
-    chat_history: List[MessageEvent] = field(default_factory=list)
-    chat_watchers: List[Widget] = field(default_factory=list)
+    chat_history: list[MessageEvent] = field(default_factory=list)
+    chat_watchers: list[Widget] = field(default_factory=list)
 
     def set_user(self, user: User):
         self.current_user = user

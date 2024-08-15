@@ -1,4 +1,4 @@
-from typing import Dict, Callable, Optional
+from typing import Callable, Optional
 
 from textual.widget import Widget
 from textual.message import Message
@@ -21,7 +21,7 @@ class RouterView(Widget):
 
     current_route = Reactive[Optional[str]](None)
 
-    def __init__(self, routes: Dict[str, Callable[[], Widget]], default_route: str):
+    def __init__(self, routes: dict[str, Callable[[], Widget]], default_route: str):
         super().__init__()
         self.routes = routes
         self.default_route = default_route
