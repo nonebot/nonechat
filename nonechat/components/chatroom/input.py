@@ -42,7 +42,7 @@ class InputBox(Widget):
     def __init__(self):
         super().__init__()
         self.input = Input(placeholder="Send Message")
-        self.input_history = ["None"]
+        self.input_history = []
         self.history_index = 0
 
     @property
@@ -56,7 +56,9 @@ class InputBox(Widget):
         event.stop()
         if event.value == "":
             return
-        if self.input_history[len(self.input_history) - 1] != event.value:
+        if not self.input_history:
+            self.input_history.append(event.value)
+        elif self.input_history[-1] != event.value:
             self.input_history.append(event.value)
         self.history_index = len(self.input_history)
         self.input.value = ""
@@ -66,15 +68,19 @@ class InputBox(Widget):
         self.input.blur()
 
     async def action_set_previous_input(self):
+        if not self.input_history:
+            return
         self.history_index -= 1
-        if self.history_index < 1:
-            self.history_index = 1
+        if self.history_index < 0:
+            self.history_index = 0
         self.input.value = self.input_history[self.history_index]
 
     async def action_set_next_input(self):
+        if not self.input_history:
+            return
         self.history_index += 1
         if self.history_index >= len(self.input_history):
             self.input.value = ""
-            self.history_index = len(self.input_history)
+            self.history_index = len(self.input_history) - 1
             return
         self.input.value = self.input_history[self.history_index]

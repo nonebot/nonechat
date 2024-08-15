@@ -25,7 +25,7 @@ class ExampleBackend(Backend):
         self._logger_id = logger.add(self.frontend._fake_output, level=0, diagnose=False)
 
     def on_console_mount(self):
-        print("on_console_mount")
+        logger.info("on_console_mount")
 
     def on_console_unmount(self):
         if self._logger_id is not None:
@@ -42,7 +42,7 @@ class ExampleBackend(Backend):
         # logger.warning("Press Ctrl-C for Application exit")
 
     async def post_event(self, event: Event):
-        print("post_event")
+        logger.info("post_event")
         if isinstance(event, MessageEvent):
             await gather(*[create_task(callback(event)) for callback in self.callbacks])
 

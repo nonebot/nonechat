@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, cast
 
 from textual.widget import Widget
 from textual.events import Unmount
-from textual.widgets import TextLog
+from textual.widgets import RichLog
 from rich.console import RenderableType
 
 if TYPE_CHECKING:
@@ -30,7 +30,7 @@ class LogPanel(Widget):
     def __init__(self, setting: "ConsoleSetting") -> None:
         super().__init__()
 
-        self.output = TextLog(max_lines=MAX_LINES, min_width=60, wrap=True, markup=True)
+        self.output = RichLog(max_lines=MAX_LINES, min_width=60, wrap=True, markup=True)
         if setting.bg_color:
             self.styles.background = setting.bg_color
             self.output.styles.background = setting.bg_color
