@@ -21,12 +21,22 @@ class Robot(User):
     nickname: str = field(default="Bot")
 
 
+@dataclass(frozen=True, eq=True)
+class Channel:
+    """频道信息"""
+    id: str
+    name: str
+    description: str = ""
+    emoji: str = "💬"
+
+
 @dataclass
 class Event:
     time: datetime
     self_id: str
     type: str
     user: User
+    channel: Channel
 
 
 @dataclass

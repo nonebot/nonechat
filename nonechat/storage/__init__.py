@@ -5,7 +5,7 @@ from textual.widget import Widget
 from textual.message import Message
 from rich.console import RenderableType
 
-from ..info import User, MessageEvent
+from ..info import User, Channel, MessageEvent
 
 MAX_LOG_RECORDS = 500
 MAX_MSG_RECORDS = 500
@@ -20,18 +20,11 @@ class StateChange(Message, Generic[T], bubble=False):
         self.data = data
 
 
-@dataclass
-class Channel:
-    """频道信息"""
-    id: str
-    name: str
-    description: str = ""
-    emoji: str = "💬"
-
 
 @dataclass
 class Storage:
     current_user: User
+    current_channel: Channel
 
     log_history: list[RenderableType] = field(default_factory=list)
     log_watchers: list[Widget] = field(default_factory=list)
@@ -39,18 +32,15 @@ class Storage:
     # 多用户和频道支持
     users: list[User] = field(default_factory=list)
     channels: list[Channel] = field(default_factory=list)
-    current_channel: Optional[Channel] = field(default=None)
     
     # 按频道分组的聊天历史记录
     chat_history_by_channel: dict[str, list[MessageEvent]] = field(default_factory=dict)
     chat_watchers: list[Widget] = field(default_factory=list)
 
     def __post_init__(self):
-        # 如果没有设置当前频道，创建一个默认频道
-        if self.current_channel is None:
-            self.current_channel = Channel("general", "通用", "默认聊天频道", "💬")
+        if self.current_channel not in self.channels:
             self.channels.append(self.current_channel)
-        
+
         # 添加当前用户到用户列表
         if self.current_user not in self.users:
             self.users.append(self.current_user)

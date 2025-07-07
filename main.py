@@ -84,14 +84,15 @@ async def on_message(event: MessageEvent):
     # 简单的机器人响应逻辑
     if message_text == "ping":
         await send_message(ConsoleMessage([Text("pong!")]))
-    elif message_text.startswith("hello"):
+    elif message_text == "inspect":
         user_name = event.user.nickname
-        await send_message(ConsoleMessage([Text(f"Hello {user_name}! 👋")]))
+        channel_name = event.channel.name
+        await send_message(ConsoleMessage([Text(f"当前频道: {channel_name}\n当前用户: {user_name}")]))
     elif message_text == "help":
         help_text = """
         🤖 可用命令:
         • ping - 测试连接
-        • hello - 打招呼
+        • inspect - 查看当前频道和用户
         • help - 显示帮助
         • users - 显示所有用户
         • channels - 显示所有频道

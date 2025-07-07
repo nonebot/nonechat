@@ -39,7 +39,8 @@ class Frontend(App, Generic[TB]):
         
         # 创建初始用户
         initial_user = User("console", setting.user_avatar, setting.user_name)
-        self.storage = Storage(initial_user)
+        initial_channel = Channel("general", "通用", "默认聊天频道", "💬")
+        self.storage = Storage(initial_user, initial_channel)
         
         self._fake_output = cast(TextIO, FakeIO(self.storage))
         self._redirect_stdout: Optional[contextlib.redirect_stdout[TextIO]] = None
@@ -86,6 +87,7 @@ class Frontend(App, Generic[TB]):
                     self_id=self.backend.bot.id,
                     message=data["message"],
                     user=self.backend.bot,
+                    channel=self.storage.current_channel,
                 )
             )
         elif api == "bell":
@@ -102,6 +104,7 @@ class Frontend(App, Generic[TB]):
             type="console.message",
             user=self.storage.current_user,
             message=ConsoleMessage([Text(message)]),
+            channel=self.storage.current_channel,
         )
         self.storage.write_chat(msg)
         await self.backend.post_event(msg)
