@@ -5,7 +5,7 @@ from textual.widget import Widget
 from textual.message import Message
 from rich.console import RenderableType
 
-from ..info import User, Channel, MessageEvent
+from ..model import User, Channel, MessageEvent
 
 MAX_LOG_RECORDS = 500
 MAX_MSG_RECORDS = 500
@@ -37,6 +37,7 @@ class Storage:
     chat_watchers: list[Widget] = field(default_factory=list)
 
     def __post_init__(self):
+        self.channels.append(Channel("_direct", "私聊", "私聊频道", "🔏"))
         if self.current_channel not in self.channels:
             self.channels.append(self.current_channel)
 

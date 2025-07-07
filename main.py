@@ -8,7 +8,7 @@ from nonechat.app import Frontend
 from nonechat.backend import Backend
 from nonechat.setting import ConsoleSetting
 from nonechat.message import Text, ConsoleMessage
-from nonechat.info import Event, Robot, MessageEvent
+from nonechat.model import Event, Robot, MessageEvent
 
 
 class ExampleBackend(Backend):

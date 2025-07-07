@@ -6,7 +6,7 @@ from textual.widgets import Static
 from rich.console import RenderableType
 
 from ...utils import truncate
-from ...info import User, MessageEvent
+from ...model import User, MessageEvent
 
 
 class Timer(Widget):

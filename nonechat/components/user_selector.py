@@ -5,7 +5,7 @@ from textual.message import Message
 from textual.containers import Vertical
 from textual.widgets import Button, Static
 
-from ..info import User
+from ..model import User
 
 if TYPE_CHECKING:
     from ..app import Frontend

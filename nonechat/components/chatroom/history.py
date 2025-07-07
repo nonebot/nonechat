@@ -8,7 +8,7 @@ from .message import Timer, Message
 
 if TYPE_CHECKING:
     from ...app import Frontend
-    from ...info import MessageEvent
+    from ...model import MessageEvent
     from ...storage import Storage, StateChange
 
 

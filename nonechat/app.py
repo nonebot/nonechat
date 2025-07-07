@@ -1,3 +1,4 @@
+import sys
 import contextlib
 from datetime import datetime
 from typing import Any, TextIO, Generic, TypeVar, Optional, cast
@@ -15,7 +16,7 @@ from .components.footer import Footer
 from .components.header import Header
 from .storage import Channel, Storage
 from .message import Text, ConsoleMessage
-from .info import User, Event, MessageEvent
+from .model import User, Event, MessageEvent
 from .views.horizontal import HorizontalView
 
 TB = TypeVar("TB", bound=Backend)
@@ -43,8 +44,10 @@ class Frontend(App, Generic[TB]):
         self.storage = Storage(initial_user, initial_channel)
 
         self._fake_output = cast(TextIO, FakeIO(self.storage))
-        self._redirect_stdout: Optional[contextlib.redirect_stdout[TextIO]] = None
-        self._redirect_stderr: Optional[contextlib.redirect_stderr[TextIO]] = None
+        self._origin_stdout = sys.stdout
+        self._origin_stderr = sys.stderr
+        self._textual_stdout: Optional[TextIO] = None
+        self._textual_stderr: Optional[TextIO] = None
         self.backend: TB = backend(self)
 
     def compose(self):
@@ -57,14 +60,12 @@ class Frontend(App, Generic[TB]):
 
     def on_mount(self):
         with contextlib.suppress(Exception):
-            stdout = contextlib.redirect_stdout(self._fake_output)
-            stdout.__enter__()
-            self._redirect_stdout = stdout
+            self._textual_stdout = sys.stdout
+            sys.stdout = self._fake_output
 
         with contextlib.suppress(Exception):
-            stderr = contextlib.redirect_stderr(self._fake_output)
-            stderr.__enter__()
-            self._redirect_stderr = stderr
+            self._textual_stderr = sys.stderr
+            sys.stderr = self._fake_output
 
         # 应用主题背景色
         self.apply_theme_background()
@@ -72,12 +73,10 @@ class Frontend(App, Generic[TB]):
         self.backend.on_console_mount()
 
     def on_unmount(self):
-        if self._redirect_stderr is not None:
-            self._redirect_stderr.__exit__(None, None, None)
-            self._redirect_stderr = None
-        if self._redirect_stdout is not None:
-            self._redirect_stdout.__exit__(None, None, None)
-            self._redirect_stdout = None
+        if self._textual_stdout is not None:
+            sys.stdout = self._origin_stdout
+        if self._textual_stderr is not None:
+            sys.stderr = self._origin_stderr
         self.backend.on_console_unmount()
 
     async def call(self, api: str, data: dict[str, Any]):

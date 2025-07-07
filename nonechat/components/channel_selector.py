@@ -99,7 +99,7 @@ class ChannelSelector(Widget):
                 channel_list.mount(button)
 
             # 标记当前频道
-            if self.app.storage.current_channel and channel.id == self.app.storage.current_channel.id:
+            if channel.id == self.app.storage.current_channel.id:
                 button.add_class("current")
             else:
                 button.remove_class("current")
