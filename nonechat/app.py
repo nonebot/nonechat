@@ -7,15 +7,15 @@ from textual.widgets import Input
 from textual.binding import Binding
 
 from .backend import Backend
-from .storage import Storage, Channel
 from .router import RouterView
 from .log_redirect import FakeIO
 from .setting import ConsoleSetting
 from .views.log_view import LogView
 from .components.footer import Footer
 from .components.header import Header
+from .storage import Channel, Storage
 from .message import Text, ConsoleMessage
-from .info import User, Event, MessageEvent, Robot
+from .info import User, Event, MessageEvent
 from .views.horizontal import HorizontalView
 
 TB = TypeVar("TB", bound=Backend)
@@ -36,17 +36,16 @@ class Frontend(App, Generic[TB]):
         self.setting = setting
         self.title = setting.title  # type: ignore
         self.sub_title = setting.sub_title  # type: ignore
-        
+
         # 创建初始用户
         initial_user = User("console", setting.user_avatar, setting.user_name)
         initial_channel = Channel("general", "通用", "默认聊天频道", "💬")
         self.storage = Storage(initial_user, initial_channel)
-        
+
         self._fake_output = cast(TextIO, FakeIO(self.storage))
         self._redirect_stdout: Optional[contextlib.redirect_stdout[TextIO]] = None
         self._redirect_stderr: Optional[contextlib.redirect_stderr[TextIO]] = None
         self.backend: TB = backend(self)
-
 
     def compose(self):
         yield Header()

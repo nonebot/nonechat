@@ -82,14 +82,14 @@ class HorizontalView(Widget):
         """处理用户切换事件"""
         # 刷新聊天室显示
         await self.chatroom.history.refresh_history()
-        
+
         # 可以在这里添加其他需要更新的组件
-        
+
     async def on_sidebar_channel_changed(self, event: SidebarChannelChanged):
         """处理频道切换事件"""
         # 刷新聊天室显示
         await self.chatroom.history.refresh_history()
-        
+
         # 更新工具栏标题
         self.chatroom.update_toolbar_title(event.channel.name)
 

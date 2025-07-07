@@ -8,8 +8,7 @@ from nonechat.app import Frontend
 from nonechat.backend import Backend
 from nonechat.setting import ConsoleSetting
 from nonechat.message import Text, ConsoleMessage
-from nonechat.info import Event, Robot, MessageEvent, User
-from nonechat.storage import Channel
+from nonechat.info import Event, Robot, MessageEvent
 
 
 class ExampleBackend(Backend):
@@ -80,7 +79,7 @@ async def send_message(message: ConsoleMessage):
 async def on_message(event: MessageEvent):
     """处理消息事件 - 支持多用户和频道"""
     message_text = str(event.message)
-    
+
     # 简单的机器人响应逻辑
     if message_text == "ping":
         await send_message(ConsoleMessage([Text("pong!")]))

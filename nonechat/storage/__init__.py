@@ -1,5 +1,5 @@
-from typing import Generic, TypeVar, Optional
 from dataclasses import field, dataclass
+from typing import Generic, TypeVar, Optional
 
 from textual.widget import Widget
 from textual.message import Message
@@ -20,7 +20,6 @@ class StateChange(Message, Generic[T], bubble=False):
         self.data = data
 
 
-
 @dataclass
 class Storage:
     current_user: User
@@ -32,7 +31,7 @@ class Storage:
     # 多用户和频道支持
     users: list[User] = field(default_factory=list)
     channels: list[Channel] = field(default_factory=list)
-    
+
     # 按频道分组的聊天历史记录
     chat_history_by_channel: dict[str, list[MessageEvent]] = field(default_factory=dict)
     chat_watchers: list[Widget] = field(default_factory=list)
@@ -93,19 +92,19 @@ class Storage:
     def write_chat(self, *messages: "MessageEvent") -> None:
         if self.current_channel is None:
             return
-        
+
         # 确保当前频道有聊天历史记录
         if self.current_channel.id not in self.chat_history_by_channel:
             self.chat_history_by_channel[self.current_channel.id] = []
-        
+
         # 添加消息到当前频道
         current_history = self.chat_history_by_channel[self.current_channel.id]
         current_history.extend(messages)
-        
+
         # 限制历史记录数量
         if len(current_history) > MAX_MSG_RECORDS:
             self.chat_history_by_channel[self.current_channel.id] = current_history[-MAX_MSG_RECORDS:]
-        
+
         self.emit_chat_watcher(*messages)
 
     def clear_chat_history(self):

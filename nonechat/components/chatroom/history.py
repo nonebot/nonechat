@@ -72,6 +72,6 @@ class ChatHistory(Widget):
         self.last_time = None
         for msg in self.walk_children():
             cast(Widget, msg).remove()
-        
+
         # 重新加载当前频道的历史记录
         await self.on_new_message(self.storage.chat_history)

@@ -24,6 +24,7 @@ class Robot(User):
 @dataclass(frozen=True, eq=True)
 class Channel:
     """频道信息"""
+
     id: str
     name: str
     description: str = ""
