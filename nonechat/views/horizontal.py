@@ -6,6 +6,7 @@ from textual.reactive import Reactive
 
 from ..components.log import LogPanel
 from ..components.chatroom import ChatRoom
+from ..components.sidebar import Sidebar, SidebarUserChanged, SidebarChannelChanged
 
 if TYPE_CHECKING:
     from ..app import Frontend
@@ -21,16 +22,35 @@ class HorizontalView(Widget):
         width: 100%;
     }
 
-    HorizontalView > * {
+    HorizontalView > Sidebar {
+        width: 25%;
         height: 100%;
-        width: 100%;
+        min-width: 20;
     }
-    HorizontalView > .-w-50 {
-        width: 50% !important;
+    
+    HorizontalView > ChatRoom {
+        width: 75%;
+        height: 100%;
     }
-
+    
     HorizontalView > LogPanel {
+        width: 25%;
+        height: 100%;
         border-left: solid rgba(204, 204, 204, 0.7);
+        display: none;
+    }
+    
+    HorizontalView.-show-log > ChatRoom {
+        width: 50%;
+    }
+    
+    HorizontalView.-show-log > Sidebar {
+        width: 25%;
+    }
+    
+    HorizontalView.-show-log > LogPanel {
+        width: 25%;
+        display: block;
     }
     """
 
@@ -40,6 +60,7 @@ class HorizontalView(Widget):
     def __init__(self):
         super().__init__()
         setting = self.app.setting
+        self.sidebar = Sidebar()
         self.chatroom = ChatRoom()
         self.log_panel = LogPanel(setting)
         if setting.bg_color:
@@ -50,11 +71,27 @@ class HorizontalView(Widget):
         return cast("Frontend", super().app)
 
     def compose(self):
+        yield self.sidebar
         yield self.chatroom
         yield self.log_panel
 
     def on_resize(self, event: Resize):
         self.responsive(event.size.width)
+
+    async def on_sidebar_user_changed(self, event: SidebarUserChanged):
+        """处理用户切换事件"""
+        # 刷新聊天室显示
+        await self.chatroom.history.refresh_history()
+        
+        # 可以在这里添加其他需要更新的组件
+        
+    async def on_sidebar_channel_changed(self, event: SidebarChannelChanged):
+        """处理频道切换事件"""
+        # 刷新聊天室显示
+        await self.chatroom.history.refresh_history()
+        
+        # 更新工具栏标题
+        self.chatroom.update_toolbar_title(event.channel.name)
 
     def watch_can_show_log(self, can_show_log: bool):
         self._toggle_log_panel()
@@ -71,5 +108,4 @@ class HorizontalView(Widget):
     def _toggle_log_panel(self):
         show = self.can_show_log and self.show_log
         self.log_panel.display = show
-        self.chatroom.set_class(show, "-w-50")
-        self.log_panel.set_class(show, "-w-50")
+        self.set_class(show, "-show-log")
