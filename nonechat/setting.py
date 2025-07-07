@@ -13,6 +13,7 @@ class ConsoleSetting:
     icon: Optional[str] = None
     icon_color: Optional[Color] = None
     bg_color: Optional[Color] = None
+    dark_bg_color: Optional[Color] = None
     header_color: Optional[Color] = None
     toolbar_exit: str = "⛔"
     toolbar_clear: str = "🗑️"

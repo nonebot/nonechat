@@ -35,15 +35,13 @@ class Sidebar(Widget):
         width: 25%;
         height: auto;
         border-right: solid rgba(170, 170, 170, 0.7);
-        background: rgba(40, 44, 52, 0.3);
         padding: 1;
     }
-    
+
     Sidebar UserSelector {
         height: 45%;
-        margin-bottom: 1;
     }
-    
+
     Sidebar ChannelSelector {
         height: 45%;
     }
@@ -53,6 +51,9 @@ class Sidebar(Widget):
         super().__init__()
         self.user_selector = UserSelector()
         self.channel_selector = ChannelSelector()
+        # setting = self.app.setting
+        # if setting.bg_color:
+        #     self.styles.background = setting.bg_color
 
     @property
     def app(self) -> "Frontend":

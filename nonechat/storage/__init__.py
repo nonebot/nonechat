@@ -1,5 +1,5 @@
+from typing import Generic, TypeVar
 from dataclasses import field, dataclass
-from typing import Generic, TypeVar, Optional
 
 from textual.widget import Widget
 from textual.message import Message

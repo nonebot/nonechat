@@ -33,7 +33,7 @@ class UserSelector(Widget):
         max-height: 15;
         overflow-y: auto;
     }
-    
+
     UserSelector .title {
         height: 1;
         width: 100%;
@@ -42,31 +42,29 @@ class UserSelector(Widget):
         color: cyan;
         margin-bottom: 1;
     }
-    
+
     UserSelector .user-list {
         layout: vertical;
         height: auto;
         width: 100%;
     }
-    
+
     UserSelector .user-button {
         width: 100%;
         margin-bottom: 1;
         text-align: center;
     }
-    
+
     UserSelector .user-button.current {
-        background: darkblue;
+        background: darkgreen;
         color: white;
     }
-    
+
     UserSelector .add-user-button {
         width: 100%;
         margin-top: 1;
-        background: darkgreen;
+        background: darkblue;
         color: white;
-        text-style: bold;
-        text-align: center;
     }
     """
 

@@ -66,6 +66,9 @@ class Frontend(App, Generic[TB]):
             stderr.__enter__()
             self._redirect_stderr = stderr
 
+        # 应用主题背景色
+        self.apply_theme_background()
+
         self.backend.on_console_mount()
 
     def on_unmount(self):
@@ -110,3 +113,28 @@ class Frontend(App, Generic[TB]):
 
     async def action_post_event(self, event: Event):
         await self.backend.post_event(event)
+
+    def action_toggle_dark(self) -> None:
+        """切换暗色模式并应用相应背景色"""
+        # 先调用父类的 toggle_dark 方法
+        super().action_toggle_dark()
+
+        # 应用对应的背景色
+        self.apply_theme_background()
+
+    def apply_theme_background(self) -> None:
+        """根据当前主题模式应用背景色设置"""
+        setting = self.setting
+
+        # 查找需要更新背景色的视图
+        try:
+            horizontal_view = self.query_one(HorizontalView)
+            if self.dark:
+                horizontal_view.styles.background = setting.dark_bg_color
+            else:
+                horizontal_view.styles.background = setting.bg_color
+        except Exception:
+            # 视图可能还没有加载
+            pass
+
+        # 如果有其他需要设置背景色的组件，可以在这里添加

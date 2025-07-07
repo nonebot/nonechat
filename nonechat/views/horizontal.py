@@ -27,27 +27,27 @@ class HorizontalView(Widget):
         height: 100%;
         min-width: 20;
     }
-    
+
     HorizontalView > ChatRoom {
         width: 75%;
         height: 100%;
     }
-    
+
     HorizontalView > LogPanel {
         width: 25%;
         height: 100%;
         border-left: solid rgba(204, 204, 204, 0.7);
         display: none;
     }
-    
+
     HorizontalView.-show-log > ChatRoom {
         width: 50%;
     }
-    
+
     HorizontalView.-show-log > Sidebar {
         width: 25%;
     }
-    
+
     HorizontalView.-show-log > LogPanel {
         width: 25%;
         display: block;
@@ -59,12 +59,12 @@ class HorizontalView(Widget):
 
     def __init__(self):
         super().__init__()
-        setting = self.app.setting
+        # setting = self.app.setting
         self.sidebar = Sidebar()
         self.chatroom = ChatRoom()
-        self.log_panel = LogPanel(setting)
-        if setting.bg_color:
-            self.styles.background = setting.bg_color
+        self.log_panel = LogPanel()
+        # if setting.bg_color:
+        #     self.styles.background = setting.bg_color
 
     @property
     def app(self) -> "Frontend":

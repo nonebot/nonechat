@@ -33,7 +33,7 @@ class ChannelSelector(Widget):
         max-height: 15;
         overflow-y: auto;
     }
-    
+
     ChannelSelector .title {
         height: 1;
         width: 100%;
@@ -42,24 +42,24 @@ class ChannelSelector(Widget):
         color: green;
         margin-bottom: 1;
     }
-    
+
     ChannelSelector .channel-list {
         layout: vertical;
         height: auto;
         width: 100%;
     }
-    
+
     ChannelSelector .channel-button {
         width: 100%;
         margin-bottom: 1;
-        text-align: left;
+        text-align: center;
     }
-    
+
     ChannelSelector .channel-button.current {
         background: darkgreen;
         color: white;
     }
-    
+
     ChannelSelector .add-channel-button {
         width: 100%;
         margin-top: 1;
