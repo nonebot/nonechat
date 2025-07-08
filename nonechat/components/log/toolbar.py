@@ -1,9 +1,10 @@
 from textual.widget import Widget
 from textual.widgets import Static
 
+from nonechat.router import RouteChange
+from nonechat.setting import ConsoleSetting
+
 from ..action import Action
-from ...router import RouteChange
-from ...setting import ConsoleSetting
 
 
 class Toolbar(Widget):
@@ -35,15 +36,15 @@ class Toolbar(Widget):
 
     def __init__(self, settings: ConsoleSetting):
         super().__init__()
-        self.exit_button = Action(settings.toolbar_exit, id="exit", classes="left")
-        self.back_button = Action(settings.toolbar_back, id="back", classes="left ml")
-        self.settings_button = Action(settings.toolbar_setting, id="settings", classes="right")
+        self.exit_button = Action(settings.toolbar_exit, id="exit", classes="left ml")
+        self.back_button = Action(settings.toolbar_expand, id="back", classes="left")
+        # self.settings_button = Action(settings.toolbar_setting, id="settings", classes="right")
 
     def compose(self):
         yield self.exit_button
         yield self.back_button
         yield Static("Log", classes="center")
-        yield self.settings_button
+        # yield self.settings_button
 
     async def on_action_pressed(self, event: Action.Pressed):
         event.stop()
@@ -51,5 +52,5 @@ class Toolbar(Widget):
             self.app.exit()
         if event.action == self.back_button:
             self.post_message(RouteChange("main"))
-        elif event.action == self.settings_button:
-            ...
+        # elif event.action == self.settings_button:
+        #     ...

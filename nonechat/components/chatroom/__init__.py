@@ -8,7 +8,7 @@ from .toolbar import Toolbar
 from .history import ChatHistory
 
 if TYPE_CHECKING:
-    from ...app import Frontend
+    from nonechat.app import Frontend
 
 
 class ChatRoom(Widget):
@@ -29,9 +29,10 @@ class ChatRoom(Widget):
     def __init__(self):
         super().__init__()
         self.history = ChatHistory()
+        self.toolbar = Toolbar()
 
     def compose(self):
-        yield Toolbar(self.app.setting)
+        yield self.toolbar
         yield self.history
         yield InputBox()
 

@@ -5,7 +5,7 @@ from textual.widgets import Input
 from textual.binding import Binding
 
 if TYPE_CHECKING:
-    from ...app import Frontend
+    from nonechat.app import Frontend
 
 
 class InputBox(Widget):

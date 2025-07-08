@@ -20,13 +20,13 @@ class LogView(Widget):
 
     def __init__(self):
         super().__init__()
-        setting = self.app.setting
-        if setting.bg_color:
-            self.styles.background = setting.bg_color
+        # setting = self.app.setting
+        # if setting.bg_color:
+        #     self.styles.background = setting.bg_color
 
     def compose(self):
         yield Toolbar(self.app.setting)
-        yield LogPanel(self.app.setting)
+        yield LogPanel()
 
     @property
     def app(self) -> "Frontend":

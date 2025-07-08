@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 from abc import ABC, abstractmethod
 
-from .info import Event, Robot
+from .model import Event, Robot
 
 if TYPE_CHECKING:
     from .app import Frontend

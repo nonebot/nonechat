@@ -1,3 +1,4 @@
+import sys
 import contextlib
 from datetime import datetime
 from typing import Any, TextIO, Generic, TypeVar, Optional, cast
@@ -7,15 +8,15 @@ from textual.widgets import Input
 from textual.binding import Binding
 
 from .backend import Backend
-from .storage import Storage
 from .router import RouterView
 from .log_redirect import FakeIO
 from .setting import ConsoleSetting
 from .views.log_view import LogView
 from .components.footer import Footer
 from .components.header import Header
+from .storage import Channel, Storage
 from .message import Text, ConsoleMessage
-from .info import User, Event, MessageEvent
+from .model import User, Event, MessageEvent
 from .views.horizontal import HorizontalView
 
 TB = TypeVar("TB", bound=Backend)
@@ -36,10 +37,17 @@ class Frontend(App, Generic[TB]):
         self.setting = setting
         self.title = setting.title  # type: ignore
         self.sub_title = setting.sub_title  # type: ignore
-        self.storage = Storage(User("console", setting.user_avatar, setting.user_name))
+
+        # 创建初始用户
+        initial_user = User("console", setting.user_avatar, setting.user_name)
+        initial_channel = Channel("general", "通用", "默认聊天频道", "💬")
+        self.storage = Storage(initial_user, initial_channel)
+
         self._fake_output = cast(TextIO, FakeIO(self.storage))
-        self._redirect_stdout: Optional[contextlib.redirect_stdout[TextIO]] = None
-        self._redirect_stderr: Optional[contextlib.redirect_stderr[TextIO]] = None
+        self._origin_stdout = sys.stdout
+        self._origin_stderr = sys.stderr
+        self._textual_stdout: Optional[TextIO] = None
+        self._textual_stderr: Optional[TextIO] = None
         self.backend: TB = backend(self)
 
     def compose(self):
@@ -52,24 +60,23 @@ class Frontend(App, Generic[TB]):
 
     def on_mount(self):
         with contextlib.suppress(Exception):
-            stdout = contextlib.redirect_stdout(self._fake_output)
-            stdout.__enter__()
-            self._redirect_stdout = stdout
+            self._textual_stdout = sys.stdout
+            sys.stdout = self._fake_output
 
         with contextlib.suppress(Exception):
-            stderr = contextlib.redirect_stderr(self._fake_output)
-            stderr.__enter__()
-            self._redirect_stderr = stderr
+            self._textual_stderr = sys.stderr
+            sys.stderr = self._fake_output
+
+        # 应用主题背景色
+        self.apply_theme_background()
 
         self.backend.on_console_mount()
 
     def on_unmount(self):
-        if self._redirect_stderr is not None:
-            self._redirect_stderr.__exit__(None, None, None)
-            self._redirect_stderr = None
-        if self._redirect_stdout is not None:
-            self._redirect_stdout.__exit__(None, None, None)
-            self._redirect_stdout = None
+        if self._textual_stdout is not None:
+            sys.stdout = self._origin_stdout
+        if self._textual_stderr is not None:
+            sys.stderr = self._origin_stderr
         self.backend.on_console_unmount()
 
     async def call(self, api: str, data: dict[str, Any]):
@@ -81,6 +88,7 @@ class Frontend(App, Generic[TB]):
                     self_id=self.backend.bot.id,
                     message=data["message"],
                     user=self.backend.bot,
+                    channel=self.storage.current_channel,
                 )
             )
         elif api == "bell":
@@ -97,9 +105,35 @@ class Frontend(App, Generic[TB]):
             type="console.message",
             user=self.storage.current_user,
             message=ConsoleMessage([Text(message)]),
+            channel=self.storage.current_channel,
         )
         self.storage.write_chat(msg)
         await self.backend.post_event(msg)
 
     async def action_post_event(self, event: Event):
         await self.backend.post_event(event)
+
+    def action_toggle_dark(self) -> None:
+        """切换暗色模式并应用相应背景色"""
+        # 先调用父类的 toggle_dark 方法
+        super().action_toggle_dark()
+
+        # 应用对应的背景色
+        self.apply_theme_background()
+
+    def apply_theme_background(self) -> None:
+        """根据当前主题模式应用背景色设置"""
+        setting = self.setting
+
+        # 查找需要更新背景色的视图
+        try:
+            horizontal_view = self.query_one(HorizontalView)
+            if self.current_theme.dark:
+                horizontal_view.styles.background = setting.dark_bg_color
+            else:
+                horizontal_view.styles.background = setting.bg_color
+        except Exception:
+            # 视图可能还没有加载
+            pass
+
+        # 如果有其他需要设置背景色的组件，可以在这里添加

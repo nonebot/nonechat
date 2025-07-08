@@ -28,3 +28,7 @@ class ExampleBackend(Backend):
 app = Frontend(ExampleBackend)
 app.run()
 ```
+
+## 预览
+
+![](./view.png)

@@ -33,3 +33,7 @@ class FakeIO:
 
     def _write_to_storage(self) -> None:
         self.storage.write_log(Text.from_ansi("".join(self._buffer), end="", tab_size=4))
+
+    def read(self) -> str:
+        self.flush()  # 确保所有内容都被写入存储
+        return "".join(self._buffer)
