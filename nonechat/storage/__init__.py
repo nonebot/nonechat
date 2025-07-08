@@ -1,5 +1,5 @@
-from typing import Generic, TypeVar
 from dataclasses import field, dataclass
+from typing import Union, Generic, TypeVar
 
 from textual.widget import Widget
 from textual.message import Message
@@ -95,27 +95,26 @@ class Storage:
         for watcher in self.log_watchers:
             watcher.post_message(StateChange(logs))
 
-    def write_chat(self, *messages: "MessageEvent") -> None:
-        for msg in messages:
-            if msg.channel == DIRECT:
-                if self.current_user.id not in self.chat_history_by_user:
-                    self.chat_history_by_user[self.current_user.id] = []
-                # 添加消息到当前用户的私聊历史
-                current_history = self.chat_history_by_user[self.current_user.id]
-                current_history.append(msg)
-                if len(current_history) > MAX_MSG_RECORDS:
-                    self.chat_history_by_user[self.current_user.id] = current_history[-MAX_MSG_RECORDS:]
-            else:
-                if msg.channel.id not in self.chat_history_by_channel:
-                    self.chat_history_by_channel[msg.channel.id] = []
-                # 添加消息到当前频道
-                current_history = self.chat_history_by_channel[msg.channel.id]
-                current_history.append(msg)
-                # 限制历史记录数量
-                if len(current_history) > MAX_MSG_RECORDS:
-                    self.chat_history_by_channel[self.current_channel.id] = current_history[-MAX_MSG_RECORDS:]
+    def write_chat(self, message: "MessageEvent", target: Union[Channel, User]) -> None:
+        if isinstance(target, User):
+            if target.id not in self.chat_history_by_user:
+                self.chat_history_by_user[target.id] = []
+            # 添加消息到当前用户的私聊历史
+            current_history = self.chat_history_by_user[target.id]
+            current_history.append(message)
+            if len(current_history) > MAX_MSG_RECORDS:
+                self.chat_history_by_user[self.current_user.id] = current_history[-MAX_MSG_RECORDS:]
+        else:
+            if target.id not in self.chat_history_by_channel:
+                self.chat_history_by_channel[target.id] = []
+            # 添加消息到当前频道
+            current_history = self.chat_history_by_channel[target.id]
+            current_history.append(message)
+            # 限制历史记录数量
+            if len(current_history) > MAX_MSG_RECORDS:
+                self.chat_history_by_channel[self.current_channel.id] = current_history[-MAX_MSG_RECORDS:]
 
-        self.emit_chat_watcher(*messages)
+        self.emit_chat_watcher(message)
 
     def clear_chat_history(self):
         """清空当前频道的聊天历史"""

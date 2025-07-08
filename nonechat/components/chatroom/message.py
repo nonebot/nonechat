@@ -1,5 +1,6 @@
 from enum import Enum
 from datetime import datetime
+from typing import TYPE_CHECKING, cast
 
 from textual.widget import Widget
 from textual.widgets import Static
@@ -7,6 +8,10 @@ from rich.console import RenderableType
 
 from nonechat.utils import truncate
 from nonechat.model import User, MessageEvent
+
+if TYPE_CHECKING:
+    from nonechat.app import Frontend
+    from nonechat.storage import Storage
 
 
 class Timer(Widget):
@@ -59,9 +64,13 @@ class Message(Widget):
     }
     """
 
+    @property
+    def storage(self) -> "Storage":
+        return cast("Frontend", self.app).storage
+
     def __init__(self, event: "MessageEvent"):
         self.event = event
-        self.side: Side = Side.LEFT if event.user.id == event.self_id else Side.RIGHT
+        self.side: Side = Side.LEFT if event.user.id != self.storage.current_user.id else Side.RIGHT
         super().__init__(classes="left -hidden" if self.side == Side.LEFT else "right -hidden")
 
     def compose(self):

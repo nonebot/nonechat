@@ -91,25 +91,19 @@ async def on_message(event: MessageEvent):
             - ping - 测试连接
             - inspect - 查看当前频道和用户
             - help - 显示帮助
-            - users - 显示所有用户
-            - channels - 显示所有频道
+            - broadcast - 向所有用户发送消息
             """
         )
         app.send_message(ConsoleMessage([Markdown(help_text)]))
-    elif message_text == "test":
-        app.send_message(ConsoleMessage([Text("测试消息")]), event.user)
+    elif message_text == "broadcast":
+        for user in app.storage.users:
+            app.send_message(ConsoleMessage([Text("测试消息")]), user)
     elif message_text == "bell":
         await app.toggle_bell()
     elif message_text == "md":
         with open("./README.md", encoding="utf-8") as md_file:
             md_text = md_file.read()
         app.send_message(ConsoleMessage([Markdown(md_text)]))
-    elif message_text == "users":
-        users_list = "\n".join([f"{user.avatar} {user.nickname}" for user in app.storage.users])
-        app.send_message(ConsoleMessage([Text(f"👥 当前用户:\n{users_list}")]))
-    elif message_text == "channels":
-        channels_list = "\n".join([f"{channel.avatar} {channel.name}" for channel in app.storage.channels])
-        app.send_message(ConsoleMessage([Text(f"📺 当前频道:\n{channels_list}")]))
     else:
         # 在不同频道中有不同的回复
         if app.storage.current_channel:

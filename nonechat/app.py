@@ -88,14 +88,16 @@ class Frontend(App, Generic[TB]):
         else:
             channel = target
         if channel != self.storage.current_channel:
-            self.notify(
-                (
-                    f"Message from {self.storage.current_user.nickname}: {message!s}"
-                    if channel == DIRECT
-                    else f"Message from {channel.name}({channel.id}): {message!s}"
-                ),
-                title="New Message",
-            )
+            if isinstance(target, Channel):
+                self.notify(
+                    f"Message from {target.name}({target.id}): {message!s}",
+                    title="New Message",
+                )
+            elif target == self.storage.current_user:
+                self.notify(
+                    f"Message from {self.backend.bot.nickname}: {message!s}",
+                    title="New Message",
+                )
 
         msg = MessageEvent(
             time=datetime.now(),
@@ -105,7 +107,7 @@ class Frontend(App, Generic[TB]):
             message=message,
             channel=channel,
         )
-        self.storage.write_chat(msg)
+        self.storage.write_chat(msg, target or self.storage.current_channel)
 
     async def toggle_bell(self):
         await self.run_action("bell")
@@ -123,7 +125,9 @@ class Frontend(App, Generic[TB]):
             message=ConsoleMessage([Text(message)]),
             channel=self.storage.current_channel,
         )
-        self.storage.write_chat(msg)
+        self.storage.write_chat(
+            msg, self.storage.current_user if self.storage.is_direct else self.storage.current_channel
+        )
         await self.backend.post_event(msg)
 
     async def action_post_event(self, event: Event):
