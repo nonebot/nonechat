@@ -2,8 +2,7 @@ from typing import TYPE_CHECKING, cast
 
 from textual.widget import Widget
 from textual.message import Message
-from textual.containers import Vertical
-from textual.widgets import Button, Static
+from textual.widgets import Label, Button, ListItem, ListView
 
 from ..model import User
 
@@ -30,34 +29,19 @@ class UserSelector(Widget):
         border: round rgba(170, 170, 170, 0.7);
         padding: 1;
         margin: 1;
-        max-height: 15;
-        overflow-y: auto;
     }
 
-    UserSelector .title {
-        height: 1;
-        width: 100%;
-        text-align: center;
-        text-style: bold;
-        color: cyan;
-        margin-bottom: 1;
-    }
-
-    UserSelector .user-list {
-        layout: vertical;
+    UserSelector ListView {
         height: auto;
         width: 100%;
+        max-height: 85%;
     }
 
-    UserSelector .user-button {
+    UserSelector ListItem {
         width: 100%;
-        margin-bottom: 1;
+        margin: 1;
+        padding: 1;
         text-align: center;
-    }
-
-    UserSelector .user-button.current {
-        background: darkgreen;
-        color: white;
     }
 
     UserSelector .add-user-button {
@@ -70,48 +54,48 @@ class UserSelector(Widget):
 
     def __init__(self):
         super().__init__()
-        self.user_buttons: dict[str, tuple[Button, User]] = {}
+        self.user_items: dict[str, tuple[ListItem, User]] = {}
 
     @property
     def app(self) -> "Frontend":
         return cast("Frontend", super().app)
 
     def compose(self):
-        yield Static("👥 用户列表", classes="title")
-        yield Vertical(classes="user-list", id="user-list")
+        yield ListView(id="user-list")
         yield Button("➕ 添加用户", classes="add-user-button", id="add-user")
 
-    def on_mount(self):
-        self.update_user_list()
+    async def on_mount(self):
+        await self.update_user_list()
 
-    def update_user_list(self):
+    async def update_user_list(self):
         """更新用户列表"""
-        user_list = self.query_one("#user-list")
-        # user_list.remove_children()
-        # self.user_buttons.clear()
+        user_list = self.query_one("#user-list", ListView)
+        await user_list.clear()
+        self.user_items.clear()
 
         for user in self.app.storage.users:
-            if user.id in self.user_buttons:
-                button = self.user_buttons[user.id][0]
-            else:
-                button = Button(f"{user.avatar} {user.nickname}", classes="user-button", id=f"user-{user.id}")
-                self.user_buttons[user.id] = (button, user)
-                user_list.mount(button)
+            label = Label(f"{user.avatar} {user.nickname}")
+            item = ListItem(label, id=f"user-{user.id}")
+            self.user_items[user.id] = (item, user)
+            await user_list.append(item)
 
             # 标记当前用户
             if user.id == self.app.storage.current_user.id:
-                button.add_class("current")
+                item.add_class("current")
             else:
-                button.remove_class("current")
+                item.remove_class("current")
 
     async def on_button_pressed(self, event: Button.Pressed):
         """处理按钮点击事件"""
         if event.button.id == "add-user":
             await self._add_new_user()
-        elif event.button.id and event.button.id.startswith("user-"):
+
+    async def on_list_view_selected(self, event: ListView.Selected):
+        """处理列表项选择事件"""
+        if event.item and event.item.id and event.item.id.startswith("user-"):
             # 查找对应的用户
-            for button, user in self.user_buttons.values():
-                if button == event.button:
+            for item, user in self.user_items.values():
+                if item == event.item:
                     self.post_message(UserSelectorPressed(user))
                     break
 
@@ -125,10 +109,10 @@ class UserSelector(Widget):
         user_id = "".join(random.choices(string.ascii_letters + string.digits, k=8))
 
         # 一些预设的用户
-        avatars = ["👤", "🧑", "👩", "👨", "🧑‍💻", "👩‍💻", "👨‍💻", "🧑‍🎓", "👩‍🎓", "👨‍🎓"]
+        avatars = ["🟥", "🔴", "🟩", "🟦", "🟨", "🟪", "🟫"]
         names = ["用户A", "用户B", "用户C", "Alice", "Bob", "Charlie", "David", "Eve", "Frank", "Grace"]
 
         new_user = User(id=user_id, nickname=random.choice(names), avatar=random.choice(avatars))
 
         self.app.storage.add_user(new_user)
-        self.update_user_list()
+        await self.update_user_list()
