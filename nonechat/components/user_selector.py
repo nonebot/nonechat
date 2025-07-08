@@ -1,3 +1,5 @@
+import random
+import string
 from typing import TYPE_CHECKING, cast
 
 from textual.widget import Widget
@@ -101,15 +103,12 @@ class UserSelector(Widget):
 
     async def _add_new_user(self):
         """添加新用户的逻辑"""
-        # 先简单实现，稍后再创建对话框
-        import random
-        import string
 
         # 生成随机用户ID
         user_id = "".join(random.choices(string.ascii_letters + string.digits, k=8))
 
         # 一些预设的用户
-        avatars = ["🟥", "🔴", "🟩", "🟦", "🟨", "🟪", "🟫"]
+        avatars = ["🟥", "🟩", "🟦", "🟨", "🟪", "🟫", "🔵", "🔴", "🟠", "🟣", "🟤", "🟡"]
         names = ["用户A", "用户B", "用户C", "Alice", "Bob", "Charlie", "David", "Eve", "Frank", "Grace"]
 
         new_user = User(id=user_id, nickname=random.choice(names), avatar=random.choice(avatars))

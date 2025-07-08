@@ -1,3 +1,5 @@
+import random
+import string
 from typing import TYPE_CHECKING, cast
 
 from textual.widget import Widget
@@ -76,7 +78,7 @@ class ChannelSelector(Widget):
         # 假设从 storage 中获取频道列表
         if hasattr(self.app.storage, "channels"):
             for channel in self.app.storage.channels:
-                label = Label(f"{channel.emoji} {channel.name}")
+                label = Label(f"{channel.avatar} {channel.name}")
                 item = ListItem(label, id=f"channel-{channel.id}")
                 self.channel_items[channel.id] = (item, channel)
                 await channel_list.append(item)
@@ -106,8 +108,6 @@ class ChannelSelector(Widget):
 
     async def _add_new_channel(self):
         """添加新频道的逻辑"""
-        import random
-        import string
 
         # 生成随机频道ID
         channel_id = "".join(random.choices(string.ascii_letters + string.digits, k=8))
@@ -119,7 +119,7 @@ class ChannelSelector(Widget):
         new_channel = Channel(
             id=channel_id,
             name=random.choice(names),
-            emoji=random.choice(emojis),
+            avatar=random.choice(emojis),
             description=f"这是一个{random.choice(names)}频道",
         )
 

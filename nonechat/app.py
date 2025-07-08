@@ -1,7 +1,7 @@
 import sys
 import contextlib
 from datetime import datetime
-from typing import Any, TextIO, Generic, TypeVar, Optional, cast
+from typing import Union, TextIO, Generic, TypeVar, Optional, cast
 
 from textual.app import App
 from textual.widgets import Input
@@ -16,8 +16,8 @@ from .components.footer import Footer
 from .components.header import Header
 from .storage import Channel, Storage
 from .message import Text, ConsoleMessage
-from .model import User, Event, MessageEvent
 from .views.horizontal import HorizontalView
+from .model import DIRECT, User, Event, MessageEvent
 
 TB = TypeVar("TB", bound=Backend)
 
@@ -79,20 +79,36 @@ class Frontend(App, Generic[TB]):
             sys.stderr = self._origin_stderr
         self.backend.on_console_unmount()
 
-    async def call(self, api: str, data: dict[str, Any]):
-        if api == "send_msg":
-            self.storage.write_chat(
-                MessageEvent(
-                    type="console.message",
-                    time=datetime.now(),
-                    self_id=self.backend.bot.id,
-                    message=data["message"],
-                    user=self.backend.bot,
-                    channel=self.storage.current_channel,
-                )
+    def send_message(self, message: ConsoleMessage, target: Union[Channel, User, None] = None):
+        """发送消息到当前频道或指定频道"""
+        if target is None:
+            channel = self.storage.current_channel
+        elif isinstance(target, User):
+            channel = DIRECT
+        else:
+            channel = target
+        if channel != self.storage.current_channel:
+            self.notify(
+                (
+                    f"Message from {self.storage.current_user.nickname}: {message!s}"
+                    if channel == DIRECT
+                    else f"Message from {channel.name}({channel.id}): {message!s}"
+                ),
+                title="New Message",
             )
-        elif api == "bell":
-            await self.run_action("bell")
+
+        msg = MessageEvent(
+            time=datetime.now(),
+            self_id=self.backend.bot.id,
+            type="console.message",
+            user=self.backend.bot,
+            message=message,
+            channel=channel,
+        )
+        self.storage.write_chat(msg)
+
+    async def toggle_bell(self):
+        await self.run_action("bell")
 
     def action_focus_input(self):
         with contextlib.suppress(Exception):

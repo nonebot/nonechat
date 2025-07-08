@@ -5,7 +5,7 @@
 groups = ["default", "dev"]
 strategy = ["cross_platform"]
 lock_version = "4.5.0"
-content_hash = "sha256:8d9ce48aade457593a220ca61cd659d33e92a63ecb6d1ef83159f15694183333"
+content_hash = "sha256:d56aef90f326ff2b534a5f9810f5f97a73eabd92bf11db2a6537465c650af951"
 
 [[metadata.targets]]
 requires_python = "~=3.9"
@@ -407,7 +407,7 @@ files = [
 
 [[package]]
 name = "textual"
-version = "3.6.0"
+version = "3.7.0"
 requires_python = "<4.0.0,>=3.8.1"
 summary = "Modern Text User Interface framework"
 dependencies = [
@@ -417,8 +417,8 @@ dependencies = [
     "typing-extensions<5.0.0,>=4.4.0",
 ]
 files = [
-    {file = "textual-3.6.0-py3-none-any.whl", hash = "sha256:8b2fafe17b1805fd608092ab2f99b6ddeaff1809f1d5de6820bf5db5b6c51c28"},
-    {file = "textual-3.6.0.tar.gz", hash = "sha256:d86b666e34758392a4a1aefc4b781b17d0d001419d24e4d47c277f36c20b1222"},
+    {file = "textual-3.7.0-py3-none-any.whl", hash = "sha256:761352ada0427ef7e5405c0b01d9df6fafd773cba09338955249a8b45988c3fc"},
+    {file = "textual-3.7.0.tar.gz", hash = "sha256:d5cb710b4691a2d9b9075ff2dc9ebecf2d8369c893af3354dad344960c91d7c9"},
 ]
 
 [[package]]

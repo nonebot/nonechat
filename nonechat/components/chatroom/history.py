@@ -56,7 +56,8 @@ class ChatHistory(Widget):
 
     async def on_new_message(self, messages: Iterable["MessageEvent"]):
         for message in messages:
-            await self.action_new_message(message)
+            if message.channel == self.storage.current_channel:
+                await self.action_new_message(message)
 
     def action_clear_history(self):
         self.last_msg = None
@@ -71,7 +72,7 @@ class ChatHistory(Widget):
         self.last_msg = None
         self.last_time = None
         for msg in self.walk_children():
-            cast(Widget, msg).remove()
+            await cast(Widget, msg).remove()
 
         # 重新加载当前频道的历史记录
         await self.on_new_message(self.storage.chat_history)

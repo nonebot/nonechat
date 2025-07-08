@@ -28,7 +28,7 @@ class Channel:
     id: str
     name: str
     description: str = ""
-    emoji: str = "💬"
+    avatar: str = "💬"
 
 
 @dataclass
@@ -43,3 +43,6 @@ class Event:
 @dataclass
 class MessageEvent(Event):
     message: ConsoleMessage
+
+
+DIRECT = Channel("_direct", "私聊", "私聊频道", "🔏")
