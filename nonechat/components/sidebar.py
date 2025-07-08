@@ -24,6 +24,7 @@ class SidebarChannelChanged(Message):
     def __init__(self, channel) -> None:
         super().__init__()
         self.channel = channel
+        self.direct = channel.id == "_direct"
 
 
 class Sidebar(Widget):
@@ -51,9 +52,6 @@ class Sidebar(Widget):
         super().__init__()
         self.user_selector = UserSelector()
         self.channel_selector = ChannelSelector()
-        # setting = self.app.setting
-        # if setting.bg_color:
-        #     self.styles.background = setting.bg_color
 
     @property
     def app(self) -> "Frontend":

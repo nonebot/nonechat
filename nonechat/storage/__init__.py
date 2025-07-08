@@ -20,6 +20,9 @@ class StateChange(Message, Generic[T], bubble=False):
         self.data = data
 
 
+DIRECT = Channel("_direct", "私聊", "私聊频道", "🔏")
+
+
 @dataclass
 class Storage:
     current_user: User
@@ -34,10 +37,11 @@ class Storage:
 
     # 按频道分组的聊天历史记录
     chat_history_by_channel: dict[str, list[MessageEvent]] = field(default_factory=dict)
+    chat_history_by_user: dict[str, list[MessageEvent]] = field(default_factory=dict)
     chat_watchers: list[Widget] = field(default_factory=list)
 
     def __post_init__(self):
-        self.channels.append(Channel("_direct", "私聊", "私聊频道", "🔏"))
+        self.channels.append(DIRECT)
         if self.current_channel not in self.channels:
             self.channels.append(self.current_channel)
 
@@ -46,10 +50,14 @@ class Storage:
             self.users.append(self.current_user)
 
     @property
+    def is_direct(self) -> bool:
+        return self.current_channel == DIRECT
+
+    @property
     def chat_history(self) -> list[MessageEvent]:
         """获取当前频道的聊天历史"""
-        if self.current_channel is None:
-            return []
+        if self.current_channel == DIRECT:
+            return self.chat_history_by_user.get(self.current_user.id, [])
         return self.chat_history_by_channel.get(self.current_channel.id, [])
 
     def set_user(self, user: User):
@@ -91,28 +99,35 @@ class Storage:
             watcher.post_message(StateChange(logs))
 
     def write_chat(self, *messages: "MessageEvent") -> None:
-        if self.current_channel is None:
-            return
 
-        # 确保当前频道有聊天历史记录
-        if self.current_channel.id not in self.chat_history_by_channel:
-            self.chat_history_by_channel[self.current_channel.id] = []
+        if self.current_channel == DIRECT:
+            if self.current_user.id not in self.chat_history_by_user:
+                self.chat_history_by_user[self.current_user.id] = []
+            # 添加消息到当前用户的私聊历史
+            current_history = self.chat_history_by_user[self.current_user.id]
+            current_history.extend(messages)
 
-        # 添加消息到当前频道
-        current_history = self.chat_history_by_channel[self.current_channel.id]
-        current_history.extend(messages)
-
-        # 限制历史记录数量
-        if len(current_history) > MAX_MSG_RECORDS:
-            self.chat_history_by_channel[self.current_channel.id] = current_history[-MAX_MSG_RECORDS:]
+            if len(current_history) > MAX_MSG_RECORDS:
+                self.chat_history_by_user[self.current_user.id] = current_history[-MAX_MSG_RECORDS:]
+        else:
+            if self.current_channel.id not in self.chat_history_by_channel:
+                self.chat_history_by_channel[self.current_channel.id] = []
+            # 添加消息到当前频道
+            current_history = self.chat_history_by_channel[self.current_channel.id]
+            current_history.extend(messages)
+            # 限制历史记录数量
+            if len(current_history) > MAX_MSG_RECORDS:
+                self.chat_history_by_channel[self.current_channel.id] = current_history[-MAX_MSG_RECORDS:]
 
         self.emit_chat_watcher(*messages)
 
     def clear_chat_history(self):
         """清空当前频道的聊天历史"""
-        if self.current_channel is not None:
+        if self.current_channel == DIRECT:
+            self.chat_history_by_user[self.current_user.id] = []
+        else:
             self.chat_history_by_channel[self.current_channel.id] = []
-            self.emit_chat_watcher()
+        self.emit_chat_watcher()
 
     def add_chat_watcher(self, watcher: Widget) -> None:
         self.chat_watchers.append(watcher)

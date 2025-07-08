@@ -83,7 +83,8 @@ class HorizontalView(Widget):
         # 刷新聊天室显示
         await self.chatroom.history.refresh_history()
 
-        # 可以在这里添加其他需要更新的组件
+        if self.app.storage.is_direct:
+            self.chatroom.toolbar.center_title.update(self.app.storage.current_user.nickname)
 
     async def on_sidebar_channel_changed(self, event: SidebarChannelChanged):
         """处理频道切换事件"""
@@ -91,7 +92,10 @@ class HorizontalView(Widget):
         await self.chatroom.history.refresh_history()
 
         # 更新工具栏标题
-        self.chatroom.update_toolbar_title(event.channel.name)
+        if event.direct:
+            self.chatroom.toolbar.center_title.update(self.app.storage.current_user.nickname)
+        else:
+            self.chatroom.toolbar.center_title.update(event.channel.name)
 
     def watch_can_show_log(self, can_show_log: bool):
         self._toggle_log_panel()

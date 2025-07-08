@@ -29,21 +29,15 @@ class ChatRoom(Widget):
     def __init__(self):
         super().__init__()
         self.history = ChatHistory()
-        self.toolbar = None
+        self.toolbar = Toolbar(self.app.setting)
 
     def compose(self):
-        self.toolbar = Toolbar(self.app.setting)
         yield self.toolbar
         yield self.history
         yield InputBox()
 
     def action_clear_history(self):
         self.history.action_clear_history()
-
-    def update_toolbar_title(self, title: str):
-        """更新工具栏标题"""
-        if self.toolbar:
-            self.toolbar.center_title.update(title)
 
     @property
     def app(self) -> "Frontend":
