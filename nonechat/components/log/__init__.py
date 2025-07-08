@@ -7,8 +7,8 @@ from textual.widgets import RichLog
 from rich.console import RenderableType
 
 if TYPE_CHECKING:
-    from ...app import Frontend
-    from ...storage import Storage, StateChange
+    from nonechat.app import Frontend
+    from nonechat.storage import Storage, StateChange
 
 
 MAX_LINES = 1000

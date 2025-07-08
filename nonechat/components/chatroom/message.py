@@ -5,8 +5,8 @@ from textual.widget import Widget
 from textual.widgets import Static
 from rich.console import RenderableType
 
-from ...utils import truncate
-from ...model import User, MessageEvent
+from nonechat.utils import truncate
+from nonechat.model import User, MessageEvent
 
 
 class Timer(Widget):

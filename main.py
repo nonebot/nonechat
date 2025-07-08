@@ -1,4 +1,5 @@
 import sys
+from inspect import cleandoc
 from asyncio import gather, create_task
 
 from loguru import logger
@@ -88,17 +89,19 @@ async def on_message(event: MessageEvent):
         channel_name = event.channel.name
         await send_message(ConsoleMessage([Text(f"当前频道: {channel_name}\n当前用户: {user_name}")]))
     elif message_text == "help":
-        help_text = """\
-🤖 可用命令:
-- ping - 测试连接
-- inspect - 查看当前频道和用户
-- help - 显示帮助
-- users - 显示所有用户
-- channels - 显示所有频道
-"""
+        help_text = cleandoc(
+            """
+            🤖 可用命令:
+            - ping - 测试连接
+            - inspect - 查看当前频道和用户
+            - help - 显示帮助
+            - users - 显示所有用户
+            - channels - 显示所有频道
+            """
+        )
         await send_message(ConsoleMessage([Markdown(help_text)]))
     elif message_text == "md":
-        with open("README.md", encoding="utf-8") as md_file:
+        with open("./README.md", encoding="utf-8") as md_file:
             md_text = md_file.read()
         await send_message(ConsoleMessage([Markdown(md_text)]))
     elif message_text == "users":

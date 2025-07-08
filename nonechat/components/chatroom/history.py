@@ -7,9 +7,9 @@ from textual.widget import Widget
 from .message import Timer, Message
 
 if TYPE_CHECKING:
-    from ...app import Frontend
-    from ...model import MessageEvent
-    from ...storage import Storage, StateChange
+    from nonechat.app import Frontend
+    from nonechat.model import MessageEvent
+    from nonechat.storage import Storage, StateChange
 
 
 class ChatHistory(Widget):

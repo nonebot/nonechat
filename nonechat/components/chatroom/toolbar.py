@@ -3,13 +3,15 @@ from typing import TYPE_CHECKING, cast
 from textual.widget import Widget
 from textual.widgets import Static
 
+from nonechat.router import RouteChange
+
 from ..action import Action
-from ...router import RouteChange
 
 if TYPE_CHECKING:
+    from nonechat.app import Frontend
+    from nonechat.views.horizontal import HorizontalView
+
     from .history import ChatHistory
-    from ...setting import ConsoleSetting
-    from ...views.horizontal import HorizontalView
 
 
 class Toolbar(Widget):
@@ -42,21 +44,29 @@ class Toolbar(Widget):
     }
     """
 
-    def __init__(self, setting: "ConsoleSetting"):
+    @property
+    def app(self) -> "Frontend":
+        return cast("Frontend", super().app)
+
+    def __init__(self):
         super().__init__()
-        self.exit_button = Action(setting.toolbar_exit, id="exit", classes="left")
-        self.clear_button = Action(setting.toolbar_clear, id="clear", classes="left ml")
+        setting = self.app.setting
+        self.toggle_sidebar_button = Action(setting.toolbar_fold, id="toggle-sidebar", classes="left")
+        self.exit_button = Action(setting.toolbar_exit, id="exit", classes="left ml")
+
         self.center_title = Static(setting.room_title, classes="center")
-        self.settings_button = Action(setting.toolbar_setting, id="settings", classes="right mr")
+        # self.settings_button = Action(setting.toolbar_setting, id="settings", classes="right mr")
+        self.clear_button = Action(setting.toolbar_clear, id="clear", classes="right mr")
         self.log_button = Action(setting.toolbar_log, id="log", classes="right")
 
     def compose(self):
         yield self.exit_button
-        yield self.clear_button
+        yield self.toggle_sidebar_button
 
         yield self.center_title
 
-        yield self.settings_button
+        # yield self.settings_button
+        yield self.clear_button
         yield self.log_button
 
     async def on_action_pressed(self, event: Action.Pressed):
@@ -66,8 +76,15 @@ class Toolbar(Widget):
         elif event.action == self.clear_button:
             history: ChatHistory = cast("ChatHistory", self.app.query_one("ChatHistory"))
             history.action_clear_history()
-        elif event.action == self.settings_button:
-            ...
+        elif event.action == self.toggle_sidebar_button:
+            view: HorizontalView = cast("HorizontalView", self.app.query_one("HorizontalView"))
+            view.action_toggle_sidebar()
+            if view.show_sidebar:
+                self.toggle_sidebar_button.update(self.app.setting.toolbar_fold)
+            else:
+                self.toggle_sidebar_button.update(self.app.setting.toolbar_expand)
+        # elif event.action == self.settings_button:
+        #     ...
         elif event.action == self.log_button:
             view: HorizontalView = cast("HorizontalView", self.app.query_one("HorizontalView"))
             if view.can_show_log:

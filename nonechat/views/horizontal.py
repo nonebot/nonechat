@@ -52,10 +52,24 @@ class HorizontalView(Widget):
         width: 25%;
         display: block;
     }
+
+    HorizontalView.-hide-sidebar > Sidebar {
+        display: none;
+        width: 0;
+    }
+
+    HorizontalView.-hide-sidebar > ChatRoom {
+        width: 100%;
+    }
+
+    HorizontalView.-hide-sidebar.-show-log > ChatRoom {
+        width: 75%;
+    }
     """
 
     can_show_log: Reactive[bool] = Reactive(False)
     show_log: Reactive[bool] = Reactive(True)
+    show_sidebar: Reactive[bool] = Reactive(True)
 
     def __init__(self):
         super().__init__()
@@ -113,3 +127,18 @@ class HorizontalView(Widget):
         show = self.can_show_log and self.show_log
         self.log_panel.display = show
         self.set_class(show, "-show-log")
+
+    def watch_show_sidebar(self, show_sidebar: bool):
+        """监控侧边栏显示状态变化"""
+        self._toggle_sidebar()
+
+    def _toggle_sidebar(self):
+        """切换侧边栏显示状态"""
+        if self.show_sidebar:
+            self.remove_class("-hide-sidebar")
+        else:
+            self.add_class("-hide-sidebar")
+
+    def action_toggle_sidebar(self):
+        """触发侧边栏显示/隐藏的动作"""
+        self.show_sidebar = not self.show_sidebar
