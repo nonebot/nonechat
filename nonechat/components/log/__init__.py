@@ -28,11 +28,7 @@ class LogPanel(Widget):
 
     def __init__(self) -> None:
         super().__init__()
-
         self.output = RichLog(max_lines=MAX_LINES, min_width=60, wrap=True, markup=True)
-        # if setting.bg_color:
-        #     self.styles.background = setting.bg_color
-        #     self.output.styles.background = setting.bg_color
 
     @property
     def storage(self) -> "Storage":

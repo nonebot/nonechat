@@ -11,7 +11,7 @@ from ..components.sidebar import Sidebar, SidebarUserChanged, SidebarChannelChan
 if TYPE_CHECKING:
     from ..app import Frontend
 
-SHOW_LOG_BREAKPOINT = 120
+SHOW_LOG_BREAKPOINT = 125
 
 
 class HorizontalView(Widget):
@@ -73,12 +73,9 @@ class HorizontalView(Widget):
 
     def __init__(self):
         super().__init__()
-        # setting = self.app.setting
         self.sidebar = Sidebar()
         self.chatroom = ChatRoom()
         self.log_panel = LogPanel()
-        # if setting.bg_color:
-        #     self.styles.background = setting.bg_color
 
     @property
     def app(self) -> "Frontend":

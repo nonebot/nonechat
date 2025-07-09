@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, cast
 
 from textual.widget import Widget
 from textual.message import Message
-from textual.widgets import Label, Button, ListItem, ListView
+from textual.widgets import Label, ListItem, ListView
 
 from ..model import Channel
 
@@ -26,31 +26,20 @@ class ChannelSelector(Widget):
     DEFAULT_CSS = """
     ChannelSelector {
         layout: vertical;
-        height: auto;
+        height: 100%;
         width: 100%;
-        border: round rgba(170, 170, 170, 0.7);
-        padding: 1;
-        margin: 1;
+        padding: 0 1;
     }
 
     ChannelSelector ListView {
-        height: auto;
+        height: 1fr;
         width: 100%;
-        max-height: 85%;
     }
 
     ChannelSelector ListItem {
         width: 100%;
         margin: 1;
-        padding: 1;
         text-align: center;
-    }
-
-    ChannelSelector .add-channel-button {
-        width: 100%;
-        margin-top: 1;
-        background: darkgreen;
-        color: white;
     }
     """
 
@@ -64,7 +53,6 @@ class ChannelSelector(Widget):
 
     def compose(self):
         yield ListView(id="channel-list")
-        yield Button("➕ 添加频道", classes="add-channel-button", id="add-channel")
 
     async def on_mount(self):
         await self.update_channel_list()
@@ -92,11 +80,6 @@ class ChannelSelector(Widget):
                 else:
                     item.remove_class("current")
 
-    async def on_button_pressed(self, event: Button.Pressed):
-        """处理按钮点击事件"""
-        if event.button.id == "add-channel":
-            await self._add_new_channel()
-
     async def on_list_view_selected(self, event: ListView.Selected):
         """处理列表项选择事件"""
         if event.item and event.item.id and event.item.id.startswith("channel-"):
@@ -106,7 +89,7 @@ class ChannelSelector(Widget):
                     self.post_message(ChannelSelectorPressed(channel))
                     break
 
-    async def _add_new_channel(self):
+    async def add_new_channel(self):
         """添加新频道的逻辑"""
 
         # 生成随机频道ID

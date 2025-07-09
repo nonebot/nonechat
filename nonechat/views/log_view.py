@@ -16,13 +16,13 @@ class LogView(Widget):
     LogView > Toolbar {
         dock: top;
     }
+    LogView > LogPanel {
+        padding: 0 1;
+    }
     """
 
     def __init__(self):
         super().__init__()
-        # setting = self.app.setting
-        # if setting.bg_color:
-        #     self.styles.background = setting.bg_color
 
     def compose(self):
         yield Toolbar(self.app.setting)

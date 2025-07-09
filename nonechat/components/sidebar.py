@@ -2,7 +2,8 @@ from typing import TYPE_CHECKING, cast
 
 from textual.widget import Widget
 from textual.message import Message
-from textual.widgets import TabPane, TabbedContent
+from textual.containers import Vertical
+from textual.widgets import Button, TabPane, TabbedContent
 
 from .user_selector import UserSelector, UserSelectorPressed
 from .channel_selector import ChannelSelector, ChannelSelectorPressed
@@ -36,16 +37,39 @@ class Sidebar(Widget):
         width: 25%;
         height: 100%;
         border-right: solid rgba(170, 170, 170, 0.7);
+        layout: vertical;
+    }
+
+    TabbedContent {
+        height: 100%;
     }
 
     TabPane {
         padding: 0;
+        layout: vertical;
+        height: 100%;
+    }
+
+    .selector-container {
+        height: 1fr;
+        layout: vertical;
+    }
+
+    .button-container {
+        height: auto;
+        layout: vertical;
+        margin: 1 0;
+        align-horizontal: center;
     }
 
     UserSelector, ChannelSelector {
         margin: 1 0 0 0;
-        border: none;
-        max-height: 100%;
+        height: 1fr;
+    }
+
+    .add-button {
+        background: darkgreen;
+        color: white;
     }
     """
 
@@ -61,16 +85,29 @@ class Sidebar(Widget):
     def compose(self):
         with TabbedContent():
             with TabPane("👥 用户列表", id="users"):
-                yield self.user_selector
+                with Vertical(classes="selector-container"):
+                    yield self.user_selector
+                with Vertical(classes="button-container"):
+                    yield Button("➕ 添加用户", id="add-user", classes="add-button")
             with TabPane("📺 频道列表", id="channels"):
-                yield self.channel_selector
+                with Vertical(classes="selector-container"):
+                    yield self.channel_selector
+                with Vertical(classes="button-container"):
+                    yield Button("➕ 添加频道", id="add-channel", classes="add-button")
+
+    async def on_button_pressed(self, event: Button.Pressed):
+        """处理按钮点击事件"""
+        if event.button.id == "add-user":
+            await self.user_selector.add_new_user()
+        elif event.button.id == "add-channel":
+            await self.channel_selector.add_new_channel()
 
     def on_user_selector_pressed(self, event: UserSelectorPressed):
         """处理用户选择事件"""
         # 更新当前用户
         self.app.storage.set_user(event.user)
 
-        # 更新用���选择器显示
+        # 更新用户选择器显示
         # self.user_selector.update_user_list()
 
         # 向父组件发送消息

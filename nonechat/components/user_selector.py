@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, cast
 
 from textual.widget import Widget
 from textual.message import Message
-from textual.widgets import Label, Button, ListItem, ListView
+from textual.widgets import Label, ListItem, ListView
 
 from ..model import User
 
@@ -26,31 +26,20 @@ class UserSelector(Widget):
     DEFAULT_CSS = """
     UserSelector {
         layout: vertical;
-        height: auto;
+        height: 100%;
         width: 100%;
-        border: round rgba(170, 170, 170, 0.7);
-        padding: 1;
-        margin: 1;
+        padding: 0 1;
     }
 
     UserSelector ListView {
-        height: auto;
+        height: 1fr;
         width: 100%;
-        max-height: 85%;
     }
 
     UserSelector ListItem {
         width: 100%;
         margin: 1;
-        padding: 1;
         text-align: center;
-    }
-
-    UserSelector .add-user-button {
-        width: 100%;
-        margin-top: 1;
-        background: darkblue;
-        color: white;
     }
     """
 
@@ -64,7 +53,6 @@ class UserSelector(Widget):
 
     def compose(self):
         yield ListView(id="user-list")
-        yield Button("➕ 添加用户", classes="add-user-button", id="add-user")
 
     async def on_mount(self):
         await self.update_user_list()
@@ -87,11 +75,6 @@ class UserSelector(Widget):
             else:
                 item.remove_class("current")
 
-    async def on_button_pressed(self, event: Button.Pressed):
-        """处理按钮点击事件"""
-        if event.button.id == "add-user":
-            await self._add_new_user()
-
     async def on_list_view_selected(self, event: ListView.Selected):
         """处理列表项选择事件"""
         if event.item and event.item.id and event.item.id.startswith("user-"):
@@ -101,7 +84,7 @@ class UserSelector(Widget):
                     self.post_message(UserSelectorPressed(user))
                     break
 
-    async def _add_new_user(self):
+    async def add_new_user(self):
         """添加新用户的逻辑"""
 
         # 生成随机用户ID

@@ -147,11 +147,11 @@ class Frontend(App, Generic[TB]):
 
         # 查找需要更新背景色的视图
         try:
-            horizontal_view = self.query_one(HorizontalView)
+            view = self.query_one(RouterView)
             if self.current_theme.dark:
-                horizontal_view.styles.background = setting.dark_bg_color
+                view.styles.background = setting.dark_bg_color
             else:
-                horizontal_view.styles.background = setting.bg_color
+                view.styles.background = setting.bg_color
         except Exception:
             # 视图可能还没有加载
             pass
