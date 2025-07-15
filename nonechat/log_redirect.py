@@ -1,13 +1,38 @@
-from typing import TYPE_CHECKING
+from dataclasses import field, dataclass
 
 from rich.text import Text
+from textual.widget import Widget
+from rich.console import RenderableType
 
-if TYPE_CHECKING:
-    from .storage import Storage
+from .model import StateChange
+
+MAX_LOG_RECORDS = 500
+
+
+@dataclass
+class LogStorage:
+    log_history: list[RenderableType] = field(default_factory=list)
+    log_watchers: list[Widget] = field(default_factory=list)
+
+    def write_log(self, *logs: RenderableType) -> None:
+        self.log_history.extend(logs)
+        if len(self.log_history) > MAX_LOG_RECORDS:
+            self.log_history = self.log_history[-MAX_LOG_RECORDS:]
+        self.emit_log_watcher(*logs)
+
+    def add_log_watcher(self, watcher: Widget) -> None:
+        self.log_watchers.append(watcher)
+
+    def remove_log_watcher(self, watcher: Widget) -> None:
+        self.log_watchers.remove(watcher)
+
+    def emit_log_watcher(self, *logs: RenderableType) -> None:
+        for watcher in self.log_watchers:
+            watcher.post_message(StateChange(logs))
 
 
 class FakeIO:
-    def __init__(self, storage: "Storage") -> None:
+    def __init__(self, storage: LogStorage) -> None:
         self.storage = storage
         self._buffer: list[str] = []
 

@@ -1,7 +1,8 @@
 import sys
 import contextlib
 from datetime import datetime
-from typing import Union, TextIO, Generic, TypeVar, Optional, cast
+from typing_extensions import TypeVar
+from typing import Union, TextIO, Generic, Optional, cast
 
 from textual.app import App
 from textual.widgets import Input
@@ -9,17 +10,16 @@ from textual.binding import Binding
 
 from .backend import Backend
 from .router import RouterView
-from .log_redirect import FakeIO
 from .setting import ConsoleSetting
 from .views.log_view import LogView
 from .components.footer import Footer
 from .components.header import Header
-from .storage import Channel, Storage
 from .message import Text, ConsoleMessage
+from .log_redirect import FakeIO, LogStorage
 from .views.horizontal import HorizontalView
-from .model import DIRECT, User, Event, MessageEvent
+from .model import DIRECT, User, Event, Channel, MessageEvent
 
-TB = TypeVar("TB", bound=Backend)
+TB = TypeVar("TB", bound=Backend, default=Backend)
 
 
 class Frontend(App, Generic[TB]):
@@ -38,12 +38,9 @@ class Frontend(App, Generic[TB]):
         self.title = setting.title  # type: ignore
         self.sub_title = setting.sub_title  # type: ignore
 
-        # 创建初始用户
-        initial_user = User("console", setting.user_avatar, setting.user_name)
-        initial_channel = Channel("general", "通用", "默认聊天频道", "💬")
-        self.storage = Storage(initial_user, initial_channel)
+        self.log_store = LogStorage()
 
-        self._fake_output = cast(TextIO, FakeIO(self.storage))
+        self._fake_output = cast(TextIO, FakeIO(self.log_store))
         self._origin_stdout = sys.stdout
         self._origin_stderr = sys.stderr
         self._textual_stdout: Optional[TextIO] = None
@@ -58,7 +55,7 @@ class Frontend(App, Generic[TB]):
     def on_load(self):
         self.backend.on_console_load()
 
-    def on_mount(self):
+    async def on_mount(self):
         with contextlib.suppress(Exception):
             self._textual_stdout = sys.stdout
             sys.stdout = self._fake_output
@@ -70,30 +67,32 @@ class Frontend(App, Generic[TB]):
         # 应用主题背景色
         self.apply_theme_background()
 
-        self.backend.on_console_mount()
+        await self.backend.on_console_mount()
+        await self.backend.add_user(self.backend.current_user)
+        await self.backend.add_channel(self.backend.current_channel)
 
-    def on_unmount(self):
+    async def on_unmount(self):
         if self._textual_stdout is not None:
             sys.stdout = self._origin_stdout
         if self._textual_stderr is not None:
             sys.stderr = self._origin_stderr
-        self.backend.on_console_unmount()
+        await self.backend.on_console_unmount()
 
-    def send_message(self, message: ConsoleMessage, target: Union[Channel, User, None] = None):
+    async def send_message(self, message: ConsoleMessage, target: Union[Channel, User, None] = None):
         """发送消息到当前频道或指定频道"""
         if target is None:
-            channel = self.storage.current_channel
+            channel = self.backend.current_channel
         elif isinstance(target, User):
             channel = DIRECT
         else:
             channel = target
-        if channel != self.storage.current_channel:
+        if channel != self.backend.current_channel:
             if isinstance(target, Channel):
                 self.notify(
                     f"Message from {target.name}({target.id}): {message!s}",
                     title="New Message",
                 )
-            elif target == self.storage.current_user:
+            elif target == self.backend.current_user:
                 self.notify(
                     f"Message from {self.backend.bot.nickname}: {message!s}",
                     title="New Message",
@@ -107,7 +106,7 @@ class Frontend(App, Generic[TB]):
             message=message,
             channel=channel,
         )
-        self.storage.write_chat(msg, target or self.storage.current_channel)
+        await self.backend.write_chat(msg, target or self.backend.current_channel)
 
     async def toggle_bell(self):
         await self.run_action("bell")
@@ -121,12 +120,13 @@ class Frontend(App, Generic[TB]):
             time=datetime.now(),
             self_id=self.backend.bot.id,
             type="console.message",
-            user=self.storage.current_user,
+            user=self.backend.current_user,
             message=ConsoleMessage([Text(message)]),
-            channel=self.storage.current_channel,
+            channel=self.backend.current_channel,
         )
-        self.storage.write_chat(
-            msg, self.storage.current_user if self.storage.is_direct else self.storage.current_channel
+        await self.backend.write_chat(
+            msg,
+            self.backend.current_user if self.backend.is_direct else self.backend.current_channel,
         )
         await self.backend.post_event(msg)
 

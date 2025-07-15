@@ -56,6 +56,13 @@ class ChannelSelector(Widget):
 
     async def on_mount(self):
         await self.update_channel_list()
+        self.app.backend.add_channel_watcher(self)
+
+    def on_unmount(self):
+        self.app.backend.remove_channel_watcher(self)
+
+    async def on_channel_add(self, event):
+        await self.update_channel_list()
 
     async def update_channel_list(self):
         """更新频道列表"""
@@ -64,21 +71,17 @@ class ChannelSelector(Widget):
         self.channel_items.clear()
 
         # 假设从 storage 中获取频道列表
-        if hasattr(self.app.storage, "channels"):
-            for channel in self.app.storage.channels:
-                label = Label(f"{channel.avatar} {channel.name}")
-                item = ListItem(label, id=f"channel-{channel.id}")
-                self.channel_items[channel.id] = (item, channel)
-                await channel_list.append(item)
+        for channel in await self.app.backend.get_channels():
+            label = Label(f"{channel.avatar} {channel.name}")
+            item = ListItem(label, id=f"channel-{channel.id}")
+            self.channel_items[channel.id] = (item, channel)
+            await channel_list.append(item)
 
-                # 标记当前频道
-                if (
-                    hasattr(self.app.storage, "current_channel")
-                    and channel.id == self.app.storage.current_channel.id
-                ):
-                    item.add_class("current")
-                else:
-                    item.remove_class("current")
+            # 标记当前频道
+            if channel.id == self.app.backend.current_channel.id:
+                item.add_class("current")
+            else:
+                item.remove_class("current")
 
     async def on_list_view_selected(self, event: ListView.Selected):
         """处理列表项选择事件"""
@@ -96,8 +99,8 @@ class ChannelSelector(Widget):
         channel_id = "".join(random.choices(string.ascii_letters + string.digits, k=8))
 
         # 一些预设的频道
-        emojis = ["💬", "📢", "🎮", "🎵", "📚", "💻", "🎨", "🌍", "🔧", "⚡"]
-        names = ["通用", "公告", "游戏", "音乐", "学习", "技术", "艺术", "世界", "工具", "闪电"]
+        emojis = ["📢", "🎮", "🎵", "📚", "💻", "🎨", "🌍", "🔧", "⚡"]
+        names = ["公告", "游戏", "音乐", "学习", "技术", "艺术", "世界", "工具", "闪电"]
 
         new_channel = Channel(
             id=channel_id,
@@ -107,6 +110,4 @@ class ChannelSelector(Widget):
         )
 
         # 假设 storage 有添加频道的方法
-        if hasattr(self.app.storage, "add_channel"):
-            self.app.storage.add_channel(new_channel)
-        await self.update_channel_list()
+        await self.app.backend.add_channel(new_channel)

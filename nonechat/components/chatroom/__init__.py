@@ -36,8 +36,8 @@ class ChatRoom(Widget):
         yield self.history
         yield InputBox()
 
-    def action_clear_history(self):
-        self.history.action_clear_history()
+    async def action_clear_history(self):
+        await self.history.action_clear_history()
 
     @property
     def app(self) -> "Frontend":

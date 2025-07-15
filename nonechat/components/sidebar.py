@@ -105,7 +105,7 @@ class Sidebar(Widget):
     def on_user_selector_pressed(self, event: UserSelectorPressed):
         """处理用户选择事件"""
         # 更新当前用户
-        self.app.storage.set_user(event.user)
+        self.app.backend.set_user(event.user)
 
         # 更新用户选择器显示
         # self.user_selector.update_user_list()
@@ -116,7 +116,7 @@ class Sidebar(Widget):
     def on_channel_selector_pressed(self, event: ChannelSelectorPressed):
         """处理频道选择事件"""
         # 更新当前频道
-        self.app.storage.set_channel(event.channel)
+        self.app.backend.set_channel(event.channel)
 
         # 更新频道选择器显示
         # self.channel_selector.update_channel_list()

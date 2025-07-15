@@ -75,7 +75,7 @@ class Toolbar(Widget):
             self.app.exit()
         elif event.action == self.clear_button:
             history: ChatHistory = cast("ChatHistory", self.app.query_one("ChatHistory"))
-            history.action_clear_history()
+            await history.action_clear_history()
         elif event.action == self.toggle_sidebar_button:
             view: HorizontalView = cast("HorizontalView", self.app.query_one("HorizontalView"))
             view.action_toggle_sidebar()

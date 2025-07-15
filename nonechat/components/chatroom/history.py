@@ -8,8 +8,7 @@ from .message import Timer, Message
 
 if TYPE_CHECKING:
     from nonechat.app import Frontend
-    from nonechat.model import MessageEvent
-    from nonechat.storage import Storage, StateChange
+    from nonechat.model import StateChange, MessageEvent
 
 
 class ChatHistory(Widget):
@@ -28,15 +27,15 @@ class ChatHistory(Widget):
         self.last_time: Optional[datetime] = None
 
     @property
-    def storage(self) -> "Storage":
-        return cast("Frontend", self.app).storage
+    def app(self) -> "Frontend":
+        return cast("Frontend", super().app)
 
     async def on_mount(self):
-        await self.on_new_message(self.storage.chat_history)
-        self.storage.add_chat_watcher(self)
+        await self.on_new_message(await self.app.backend.get_chat_history())
+        self.app.backend.add_chat_watcher(self)
 
     def on_unmount(self):
-        self.storage.remove_chat_watcher(self)
+        self.app.backend.remove_chat_watcher(self)
 
     async def action_new_message(self, message: "MessageEvent"):
         if (
@@ -56,15 +55,15 @@ class ChatHistory(Widget):
 
     async def on_new_message(self, messages: Iterable["MessageEvent"]):
         for message in messages:
-            if message.channel == self.storage.current_channel:
+            if message.channel == self.app.backend.current_channel:
                 await self.action_new_message(message)
 
-    def action_clear_history(self):
+    async def action_clear_history(self):
         self.last_msg = None
         self.last_time = None
         for msg in self.walk_children():
-            cast(Widget, msg).remove()
-        self.storage.clear_chat_history()
+            await cast(Widget, msg).remove()
+        await self.app.backend.clear_chat_history()
 
     async def refresh_history(self):
         """刷新聊天历史记录显示"""
@@ -75,4 +74,4 @@ class ChatHistory(Widget):
             await cast(Widget, msg).remove()
 
         # 重新加载当前频道的历史记录
-        await self.on_new_message(self.storage.chat_history)
+        await self.on_new_message(await self.app.backend.get_chat_history())

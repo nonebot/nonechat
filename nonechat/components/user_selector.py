@@ -56,6 +56,13 @@ class UserSelector(Widget):
 
     async def on_mount(self):
         await self.update_user_list()
+        self.app.backend.add_user_watcher(self)
+
+    def on_unmount(self):
+        self.app.backend.remove_user_watcher(self)
+
+    async def on_user_add(self, event):
+        await self.update_user_list()
 
     async def update_user_list(self):
         """更新用户列表"""
@@ -63,14 +70,14 @@ class UserSelector(Widget):
         await user_list.clear()
         self.user_items.clear()
 
-        for user in self.app.storage.users:
+        for user in await self.app.backend.get_users():
             label = Label(f"{user.avatar} {user.nickname}")
             item = ListItem(label, id=f"user-{user.id}")
             self.user_items[user.id] = (item, user)
             await user_list.append(item)
 
             # 标记当前用户
-            if user.id == self.app.storage.current_user.id:
+            if user.id == self.app.backend.current_user.id:
                 item.add_class("current")
             else:
                 item.remove_class("current")
@@ -96,5 +103,4 @@ class UserSelector(Widget):
 
         new_user = User(id=user_id, nickname=random.choice(names), avatar=random.choice(avatars))
 
-        self.app.storage.add_user(new_user)
-        await self.update_user_list()
+        await self.app.backend.add_user(new_user)

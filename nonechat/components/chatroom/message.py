@@ -11,7 +11,6 @@ from nonechat.model import User, MessageEvent
 
 if TYPE_CHECKING:
     from nonechat.app import Frontend
-    from nonechat.storage import Storage
 
 
 class Timer(Widget):
@@ -65,12 +64,12 @@ class Message(Widget):
     """
 
     @property
-    def storage(self) -> "Storage":
-        return cast("Frontend", self.app).storage
+    def app(self) -> "Frontend":
+        return cast("Frontend", super().app)
 
     def __init__(self, event: "MessageEvent"):
         self.event = event
-        self.side: Side = Side.LEFT if event.user.id != self.storage.current_user.id else Side.RIGHT
+        self.side: Side = Side.LEFT if event.user.id != self.app.backend.current_user.id else Side.RIGHT
         super().__init__(classes="left -hidden" if self.side == Side.LEFT else "right -hidden")
 
     def compose(self):

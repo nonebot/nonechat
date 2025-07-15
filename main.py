@@ -25,10 +25,10 @@ class ExampleBackend(Backend):
         logger.remove()
         self._logger_id = logger.add(self.frontend._fake_output, level=0, diagnose=False)
 
-    def on_console_mount(self):
+    async def on_console_mount(self):
         logger.info("on_console_mount")
 
-    def on_console_unmount(self):
+    async def on_console_unmount(self):
         if self._logger_id is not None:
             logger.remove(self._logger_id)
             self._logger_id = None
@@ -79,11 +79,11 @@ async def on_message(event: MessageEvent):
 
     # 简单的机器人响应逻辑
     if message_text == "ping":
-        app.send_message(ConsoleMessage([Text("pong!")]))
+        await app.send_message(ConsoleMessage([Text("pong!")]))
     elif message_text == "inspect":
         user_name = event.user.nickname
         channel_name = event.channel.name
-        app.send_message(ConsoleMessage([Text(f"当前频道: {channel_name}\n当前用户: {user_name}")]))
+        await app.send_message(ConsoleMessage([Text(f"当前频道: {channel_name}\n当前用户: {user_name}")]))
     elif message_text == "help":
         help_text = cleandoc(
             """
@@ -94,26 +94,25 @@ async def on_message(event: MessageEvent):
             - broadcast - 向所有用户发送消息
             """
         )
-        app.send_message(ConsoleMessage([Markdown(help_text)]))
+        await app.send_message(ConsoleMessage([Markdown(help_text)]))
     elif message_text == "broadcast":
-        for user in app.storage.users:
-            app.send_message(ConsoleMessage([Text("测试消息")]), user)
+        for user in await app.backend.get_users():
+            await app.send_message(ConsoleMessage([Text("测试消息")]), user)
     elif message_text == "bell":
         await app.toggle_bell()
     elif message_text == "md":
         with open("./README.md", encoding="utf-8") as md_file:
             md_text = md_file.read()
-        app.send_message(ConsoleMessage([Markdown(md_text)]))
+        await app.send_message(ConsoleMessage([Markdown(md_text)]))
     else:
         # 在不同频道中有不同的回复
-        if app.storage.current_channel:
-            channel_name = app.storage.current_channel.name
-            if "技术" in channel_name:
-                app.send_message(ConsoleMessage([Text(f"💻 在{channel_name}中讨论技术话题很有趣!")]))
-            elif "游戏" in channel_name:
-                app.send_message(ConsoleMessage([Text(f"🎮 {channel_name}中有什么好玩的游戏推荐吗?")]))
-            else:
-                app.send_message(ConsoleMessage([Text(f"😊 在{channel_name}中收到了你的消息")]))
+        channel_name = app.backend.current_channel.name
+        if "技术" in channel_name:
+            await app.send_message(ConsoleMessage([Text(f"💻 在{channel_name}中讨论技术话题很有趣!")]))
+        elif "游戏" in channel_name:
+            await app.send_message(ConsoleMessage([Text(f"🎮 {channel_name}中有什么好玩的游戏推荐吗?")]))
+        else:
+            await app.send_message(ConsoleMessage([Text(f"😊 在{channel_name}中收到了你的消息")]))
 
 
 if __name__ == "__main__":

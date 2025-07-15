@@ -1,10 +1,15 @@
 from datetime import datetime
+from typing import Generic, TypeVar
 from dataclasses import field, dataclass
+
+from textual.message import Message
 
 from .message import ConsoleMessage
 
+T = TypeVar("T")
 
-@dataclass(frozen=True, eq=True)
+
+@dataclass(frozen=True, eq=True, unsafe_hash=True)
 class User:
     """用户"""
 
@@ -13,7 +18,7 @@ class User:
     nickname: str = field(default="User")
 
 
-@dataclass(frozen=True, eq=True)
+@dataclass(frozen=True, eq=True, unsafe_hash=True)
 class Robot(User):
     """机器人"""
 
@@ -21,7 +26,7 @@ class Robot(User):
     nickname: str = field(default="Bot")
 
 
-@dataclass(frozen=True, eq=True)
+@dataclass(frozen=True, eq=True, unsafe_hash=True)
 class Channel:
     """频道信息"""
 
@@ -46,3 +51,9 @@ class MessageEvent(Event):
 
 
 DIRECT = Channel("_direct", "私聊", "私聊频道", "🔏")
+
+
+class StateChange(Message, Generic[T], bubble=False):
+    def __init__(self, data: T) -> None:
+        super().__init__()
+        self.data = data
