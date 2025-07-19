@@ -95,7 +95,9 @@ class HorizontalView(Widget):
         await self.chatroom.history.refresh_history()
 
         if self.app.backend.is_direct:
-            self.chatroom.toolbar.center_title.update(self.app.backend.current_user.nickname)
+            self.chatroom.toolbar.center_title.update(
+                f"{self.app.backend.current_user.nickname}({self.app.backend.current_user.id})"
+            )
 
     async def on_sidebar_channel_changed(self, event: SidebarChannelChanged):
         """处理频道切换事件"""
@@ -104,7 +106,9 @@ class HorizontalView(Widget):
 
         # 更新工具栏标题
         if event.direct:
-            self.chatroom.toolbar.center_title.update(self.app.backend.current_user.nickname)
+            self.chatroom.toolbar.center_title.update(
+                f"{self.app.backend.current_user.nickname}({self.app.backend.current_user.id})"
+            )
         else:
             self.chatroom.toolbar.center_title.update(event.channel.name)
 

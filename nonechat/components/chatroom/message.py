@@ -69,7 +69,10 @@ class Message(Widget):
 
     def __init__(self, event: "MessageEvent"):
         self.event = event
-        self.side: Side = Side.LEFT if event.user.id != self.app.backend.current_user.id else Side.RIGHT
+        if self.app.is_bot_mode:
+            self.side = Side.RIGHT if event.user.id == self.app.backend.current_bot.id else Side.LEFT
+        else:
+            self.side: Side = Side.RIGHT if event.user.id == self.app.backend.current_user.id else Side.LEFT
         super().__init__(classes="left -hidden" if self.side == Side.LEFT else "right -hidden")
 
     def compose(self):

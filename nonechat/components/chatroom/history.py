@@ -55,7 +55,7 @@ class ChatHistory(Widget):
 
     async def on_new_message(self, messages: Iterable["MessageEvent"]):
         for message in messages:
-            if message.channel == self.app.backend.current_channel:
+            if message.channel.id == self.app.backend.current_channel.id:
                 await self.action_new_message(message)
 
     async def action_clear_history(self):

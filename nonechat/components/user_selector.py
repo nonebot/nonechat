@@ -6,10 +6,11 @@ from textual.widget import Widget
 from textual.message import Message
 from textual.widgets import Label, ListItem, ListView
 
-from ..model import User
+from ..backend import BotAdd
+from ..model import User, Robot
 
 if TYPE_CHECKING:
-    from ..app import Frontend
+    from ..app import Frontend, BotModeChanged
 
 
 class UserSelectorPressed(Message):
@@ -46,6 +47,8 @@ class UserSelector(Widget):
     def __init__(self):
         super().__init__()
         self.user_items: dict[str, tuple[ListItem, User]] = {}
+        self.is_bot_mode = self.app.is_bot_mode
+        self.app.bot_mode_watchers.append(self)
 
     @property
     def app(self) -> "Frontend":
@@ -57,11 +60,21 @@ class UserSelector(Widget):
     async def on_mount(self):
         await self.update_user_list()
         self.app.backend.add_user_watcher(self)
+        self.app.backend.add_bot_watcher(self)
 
     def on_unmount(self):
         self.app.backend.remove_user_watcher(self)
+        self.app.backend.remove_bot_watcher(self)
 
     async def on_user_add(self, event):
+        await self.update_user_list()
+
+    async def on_bot_add(self, event: BotAdd):
+        await self.update_user_list()
+
+    async def on_bot_mode_changed(self, event: "BotModeChanged"):
+        """处理模式切换"""
+        self.is_bot_mode = event.is_bot_mode
         await self.update_user_list()
 
     async def update_user_list(self):
@@ -70,14 +83,24 @@ class UserSelector(Widget):
         await user_list.clear()
         self.user_items.clear()
 
-        for user in await self.app.backend.get_users():
+        # 根据模式显示不同的列表
+        if self.is_bot_mode:
+            # Bot 模式：显示 bot 列表
+            users = await self.app.backend.get_bots()
+            current_user_id = self.app.backend.current_bot.id
+        else:
+            # 普通模式：显示用户列表
+            users = await self.app.backend.get_users()
+            current_user_id = self.app.backend.current_user.id
+
+        for user in users:
             label = Label(f"{user.avatar} {user.nickname}")
             item = ListItem(label, id=f"user-{user.id}")
             self.user_items[user.id] = (item, user)
             await user_list.append(item)
 
-            # 标记当前用户
-            if user.id == self.app.backend.current_user.id:
+            # 标记当前用户/bot
+            if user.id == current_user_id:
                 item.add_class("current")
             else:
                 item.remove_class("current")
@@ -93,14 +116,15 @@ class UserSelector(Widget):
 
     async def add_new_user(self):
         """添加新用户的逻辑"""
-
         # 生成随机用户ID
         user_id = "".join(random.choices(string.ascii_letters + string.digits, k=8))
-
-        # 一些预设的用户
         avatars = ["🟥", "🟩", "🟦", "🟨", "🟪", "🟫", "🔵", "🔴", "🟠", "🟣", "🟤", "🟡"]
-        names = ["用户A", "用户B", "用户C", "Alice", "Bob", "Charlie", "David", "Eve", "Frank", "Grace"]
 
-        new_user = User(id=user_id, nickname=random.choice(names), avatar=random.choice(avatars))
-
-        await self.app.backend.add_user(new_user)
+        if self.is_bot_mode:
+            names = ["机器人A", "机器人B", "机器人C", "Bot1", "Bot2", "Bot3"]
+            new_bot = Robot(id=user_id, nickname=random.choice(names), avatar=random.choice(avatars))
+            await self.app.backend.add_bot(new_bot)
+        else:
+            names = ["用户A", "用户B", "用户C", "Alice", "Bob", "Charlie", "David", "Eve", "Frank", "Grace"]
+            new_user = User(id=user_id, nickname=random.choice(names), avatar=random.choice(avatars))
+            await self.app.backend.add_user(new_user)

@@ -5,8 +5,10 @@ from typing_extensions import TypeVar
 from typing import Union, TextIO, Generic, Optional, cast
 
 from textual.app import App
+from textual.widget import Widget
 from textual.widgets import Input
 from textual.binding import Binding
+from textual.message import Message
 
 from .backend import Backend
 from .router import RouterView
@@ -17,9 +19,15 @@ from .components.header import Header
 from .message import Text, ConsoleMessage
 from .log_redirect import FakeIO, LogStorage
 from .views.horizontal import HorizontalView
-from .model import DIRECT, User, Event, Channel, MessageEvent
+from .model import Event, Channel, MessageEvent
 
 TB = TypeVar("TB", bound=Backend, default=Backend)
+
+
+class BotModeChanged(Message):
+    def __init__(self, is_bot_mode: bool) -> None:
+        super().__init__()
+        self.is_bot_mode = is_bot_mode
 
 
 class Frontend(App, Generic[TB]):
@@ -28,11 +36,12 @@ class Frontend(App, Generic[TB]):
         Binding("ctrl+d", "toggle_dark", "Toggle dark mode"),
         Binding("ctrl+s", "screenshot", "Save a screenshot"),
         Binding("ctrl+underscore", "focus_input", "Focus input", key_display="ctrl+/"),
+        Binding("ctrl+b", "toggle_bot_mode", "Toggle bot mode", key_display="ctrl+b"),
     ]
 
     ROUTES = {"main": lambda: HorizontalView(), "log": lambda: LogView()}
 
-    def __init__(self, backend: type[TB], setting: ConsoleSetting = ConsoleSetting()):
+    def __init__(self, backend: type[TB], setting: ConsoleSetting = ConsoleSetting(), bot_mode: bool = False):
         super().__init__()
         self.setting = setting
         self.title = setting.title  # type: ignore
@@ -46,6 +55,10 @@ class Frontend(App, Generic[TB]):
         self._textual_stdout: Optional[TextIO] = None
         self._textual_stderr: Optional[TextIO] = None
         self.backend: TB = backend(self)
+
+        # Bot 模式状态
+        self.is_bot_mode = bot_mode
+        self.bot_mode_watchers: list[Widget] = []
 
     def compose(self):
         yield Header()
@@ -70,6 +83,7 @@ class Frontend(App, Generic[TB]):
         await self.backend.on_console_mount()
         await self.backend.add_user(self.backend.current_user)
         await self.backend.add_channel(self.backend.current_channel)
+        await self.backend.add_bot(self.backend.current_bot)
 
     async def on_unmount(self):
         if self._textual_stdout is not None:
@@ -78,35 +92,30 @@ class Frontend(App, Generic[TB]):
             sys.stderr = self._origin_stderr
         await self.backend.on_console_unmount()
 
-    async def send_message(self, message: ConsoleMessage, target: Union[Channel, User, None] = None):
+    async def send_message(self, message: ConsoleMessage, channel: Union[Channel, None] = None):
         """发送消息到当前频道或指定频道"""
-        if target is None:
-            channel = self.backend.current_channel
-        elif isinstance(target, User):
-            channel = DIRECT
-        else:
-            channel = target
-        if channel != self.backend.current_channel:
-            if isinstance(target, Channel):
+        target = channel or self.backend.current_channel
+        if target.id != self.backend.current_channel.id:
+            if not target.id.startswith("private:"):
                 self.notify(
                     f"Message from {target.name}({target.id}): {message!s}",
                     title="New Message",
                 )
-            elif target == self.backend.current_user:
+            elif target.id == f"private:{self.backend.current_user.id}":
                 self.notify(
-                    f"Message from {self.backend.bot.nickname}: {message!s}",
+                    f"Message from {self.backend.current_bot.nickname}: {message!s}",
                     title="New Message",
                 )
 
         msg = MessageEvent(
             time=datetime.now(),
-            self_id=self.backend.bot.id,
+            self_id=self.backend.current_bot.id,
             type="console.message",
-            user=self.backend.bot,
+            user=self.backend.current_bot,
             message=message,
-            channel=channel,
+            channel=target,
         )
-        await self.backend.write_chat(msg, target or self.backend.current_channel)
+        await self.backend.write_chat(msg, target)
 
     async def toggle_bell(self):
         await self.run_action("bell")
@@ -118,20 +127,34 @@ class Frontend(App, Generic[TB]):
     async def action_post_message(self, message: str):
         msg = MessageEvent(
             time=datetime.now(),
-            self_id=self.backend.bot.id,
+            self_id=self.backend.current_bot.id,
             type="console.message",
-            user=self.backend.current_user,
+            user=self.backend.current_bot if self.is_bot_mode else self.backend.current_user,
             message=ConsoleMessage([Text(message)]),
             channel=self.backend.current_channel,
         )
         await self.backend.write_chat(
             msg,
-            self.backend.current_user if self.backend.is_direct else self.backend.current_channel,
+            self.backend.current_channel,
         )
-        await self.backend.post_event(msg)
+        # 在普通模式下触发 post_event
+        if not self.is_bot_mode:
+            await self.backend.post_event(msg)
 
     async def action_post_event(self, event: Event):
         await self.backend.post_event(event)
+
+    async def action_toggle_bot_mode(self) -> None:
+        """切换机器人模式"""
+        self.is_bot_mode = not self.is_bot_mode
+        if self.is_bot_mode:
+            self.notify("Bot mode activated", title="Mode Changed")
+        else:
+            self.notify("User mode activated", title="Mode Changed")
+
+        # self.post_message(BotModeChanged(self.is_bot_mode))
+        for watcher in self.bot_mode_watchers:
+            watcher.post_message(BotModeChanged(self.is_bot_mode))
 
     def action_toggle_dark(self) -> None:
         """切换暗色模式并应用相应背景色"""

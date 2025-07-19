@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Any, Union
 
 from textual.widget import Widget
 from textual.message import Message
@@ -9,6 +9,12 @@ from ..model import DIRECT, User, Event, Robot, Channel, StateChange, MessageEve
 
 if TYPE_CHECKING:
     from ..app import Frontend
+
+
+class BotAdd(Message, bubble=False):
+    def __init__(self, bot: User) -> None:
+        super().__init__()
+        self.bot = bot
 
 
 class UserAdd(Message, bubble=False):
@@ -27,9 +33,9 @@ class Backend(ABC):
     frontend: "Frontend"
     storage: "MessageStorage"
 
-    def __init__(self, frontend: "Frontend"):
+    def __init__(self, frontend: "Frontend[Any]"):
         self.frontend = frontend
-        self.bot = Robot(
+        self.current_bot = Robot(
             "robot",
             self.frontend.setting.bot_avatar,
             self.frontend.setting.bot_name,
@@ -42,10 +48,11 @@ class Backend(ABC):
         self.chat_watchers: list[Widget] = []
         self.user_watchers: list[Widget] = []
         self.channel_wathers: list[Widget] = []
+        self.bot_watchers: list[Widget] = []
 
     @property
     def is_direct(self) -> bool:
-        return self.current_channel.id == DIRECT.id
+        return self.current_channel.id.startswith("private:") or self.current_channel.id == DIRECT.id
 
     async def get_users(self) -> list[User]:
         return self.storage.users
@@ -53,16 +60,30 @@ class Backend(ABC):
     async def get_channels(self) -> list[Channel]:
         return self.storage.channels
 
-    async def get_chat_history(self, target: Union[Channel, User, None] = None) -> list[MessageEvent]:
-        if target is None:
-            return self.storage.chat_history(self.current_user if self.is_direct else self.current_channel)
-        return self.storage.chat_history(self.current_user if target.id == DIRECT.id else target)
+    async def create_dm(self, user: User):
+        return Channel(f"private:{user.id}", user.nickname, "", user.avatar)
+
+    async def get_bots(self) -> list[User]:
+        return self.storage.bots
+
+    async def get_chat_history(self, channel: Union[Channel, None] = None) -> list[MessageEvent]:
+        _target = (
+            Channel(
+                f"private:{self.current_user.id}", self.current_user.nickname, "", self.current_user.avatar
+            )
+            if (channel or self.current_channel).id == DIRECT.id
+            else (channel or self.current_channel)
+        )
+        return self.storage.chat_history(_target)
 
     def set_user(self, user: User):
         self.current_user = user
 
     def set_channel(self, channel: Channel):
         self.current_channel = channel
+
+    def set_bot(self, bot: Robot):
+        self.current_bot = bot
 
     def add_user_watcher(self, watcher: Widget) -> None:
         self.user_watchers.append(watcher)
@@ -76,6 +97,12 @@ class Backend(ABC):
     def remove_channel_watcher(self, watcher: Widget) -> None:
         self.channel_wathers.remove(watcher)
 
+    def add_bot_watcher(self, watcher: Widget) -> None:
+        self.bot_watchers.append(watcher)
+
+    def remove_bot_watcher(self, watcher: Widget) -> None:
+        self.bot_watchers.remove(watcher)
+
     async def add_user(self, user: User):
         self.storage.add_user(user)
         for watcher in self.user_watchers:
@@ -86,15 +113,24 @@ class Backend(ABC):
         for watcher in self.channel_wathers:
             watcher.post_message(ChannelAdd(channel))
 
-    async def write_chat(self, message: "MessageEvent", target: Union[Channel, User]):
-        self.storage.write_chat(message, target)
+    async def add_bot(self, bot: User):
+        self.storage.add_bot(bot)
+        for watcher in self.bot_watchers:
+            watcher.post_message(BotAdd(bot))
+
+    async def write_chat(self, message: "MessageEvent", channel: Channel):
+        self.storage.write_chat(message, channel)
         self.emit_chat_watcher(message)
 
-    async def clear_chat_history(self, target: Union[Channel, User, None] = None):
-        if target is None:
-            self.storage.clear_chat_history(self.current_user if self.is_direct else self.current_channel)
-        else:
-            self.storage.clear_chat_history(self.current_user if target.id == DIRECT.id else target)
+    async def clear_chat_history(self, channel: Union[Channel, None] = None):
+        _target = (
+            Channel(
+                f"private:{self.current_user.id}", self.current_user.nickname, "", self.current_user.avatar
+            )
+            if (channel or self.current_channel).id == DIRECT.id
+            else (channel or self.current_channel)
+        )
+        self.storage.clear_chat_history(_target)
         self.emit_chat_watcher()
 
     def add_chat_watcher(self, watcher: Widget) -> None:
@@ -118,3 +154,8 @@ class Backend(ABC):
 
     @abstractmethod
     async def post_event(self, event: Event): ...
+
+    async def receive_message(self, message: "MessageEvent"):
+        """接收消息"""
+        await self.write_chat(message, message.channel)
+        await self.post_event(message)

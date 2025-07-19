@@ -1,6 +1,7 @@
 import sys
 from inspect import cleandoc
-from asyncio import gather, create_task
+from datetime import datetime
+from asyncio import gather, create_task, run, sleep
 
 from loguru import logger
 from textual.color import Color
@@ -8,7 +9,7 @@ from textual.color import Color
 from nonechat.app import Frontend
 from nonechat.backend import Backend
 from nonechat.setting import ConsoleSetting
-from nonechat.model import Event, MessageEvent
+from nonechat.model import Event, MessageEvent, User, Channel
 from nonechat.message import Text, Markdown, ConsoleMessage
 
 
@@ -69,6 +70,7 @@ app = Frontend(
         toolbar_exit="❌",
         bot_name="ChatBot",
     ),
+    bot_mode=True,  # 启用 Bot 模式
 )
 
 
@@ -116,4 +118,26 @@ async def on_message(event: MessageEvent):
 
 
 if __name__ == "__main__":
-    app.run()
+    async def generate_event():
+        """生成一个测试事件"""
+        user = User(id="1", nickname="TestUser", avatar="👤")
+        channel = Channel(id="general", name="General", avatar="🌐")
+        await app.backend.add_user(user)
+        message = ConsoleMessage([Text("help")])
+        event = MessageEvent(
+            time=datetime.now(),
+            self_id=user.id,
+            type="console.message",
+            user=user,
+            message=message,
+            channel=channel,
+        )
+        await sleep(1)
+        await app.backend.receive_message(event)
+
+    async def main():
+        create_task(generate_event())
+        await app.run_async()
+
+    run(main())
+
