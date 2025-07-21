@@ -55,16 +55,16 @@ class Backend(ABC):
         return self.current_channel.id.startswith("private:") or self.current_channel.id == DIRECT.id
 
     async def get_users(self) -> list[User]:
-        return self.storage.users
+        return list(self.storage.users.values())
 
     async def get_channels(self) -> list[Channel]:
-        return self.storage.channels
+        return list(self.storage.channels.values())
 
     async def create_dm(self, user: User):
         return Channel(f"private:{user.id}", user.nickname, "", user.avatar)
 
     async def get_bots(self) -> list[User]:
-        return self.storage.bots
+        return list(self.storage.bots.values())
 
     async def get_chat_history(self, channel: Union[Channel, None] = None) -> list[MessageEvent]:
         _target = (
@@ -113,7 +113,7 @@ class Backend(ABC):
         for watcher in self.channel_wathers:
             watcher.post_message(ChannelAdd(channel))
 
-    async def add_bot(self, bot: User):
+    async def add_bot(self, bot: Robot):
         self.storage.add_bot(bot)
         for watcher in self.bot_watchers:
             watcher.post_message(BotAdd(bot))
@@ -154,8 +154,3 @@ class Backend(ABC):
 
     @abstractmethod
     async def post_event(self, event: Event): ...
-
-    async def receive_message(self, message: "MessageEvent"):
-        """接收消息"""
-        await self.write_chat(message, message.channel)
-        await self.post_event(message)

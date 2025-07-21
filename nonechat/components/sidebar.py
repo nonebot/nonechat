@@ -103,10 +103,9 @@ class Sidebar(Widget):
 
         add_user_btn = self.query_one("#add-user", Button)
         # 更新添加用户按钮状态
-        if self.is_bot_mode:
-            add_user_btn.label = "➕ 添加机器人"
-        else:
-            add_user_btn.label = "➕ 添加用户"
+        add_user_btn.label = "➕ 添加机器人" if self.is_bot_mode else "➕ 添加用户"
+        # tab_users = self.query_one("#users", ContentTab)
+        # tab_users.label = "🤖 机器人列表" if self.is_bot_mode else "👥 用户列表"
 
         # 更新添加频道按钮状态
         add_channel_btn = self.query_one("#add-channel", Button)
