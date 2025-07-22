@@ -75,16 +75,16 @@ class Backend(ABC):
 
     async def list_channels(self, list_users: bool = False) -> list[Channel]:
         data = list(self.storage.channels.values())
-        data[0] = await self.create_dm(
-            self.current_user
-        )  # Ensure the first channel is the DM with current user
+        data.pop(0)
+        users = [await self.create_dm(self.current_user)]
         if list_users:
-            data = [
-                (await self.create_dm(user))
+            users += [
+                await self.create_dm(user)
                 for user in self.storage.users.values()
                 if user.id != self.current_user.id
-            ] + data
-        return data
+            ]
+        users.sort(key=lambda x: x._created_at.timestamp(), reverse=True)
+        return users + data
 
     async def create_dm(self, user: User):
         chl = Channel(f"private:{user.id}", user.nickname, "", user.avatar)
@@ -96,9 +96,7 @@ class Backend(ABC):
 
     async def get_chat_history(self, channel: Union[Channel, None] = None) -> list[MessageEvent]:
         _target = (
-            Channel(
-                f"private:{self.current_user.id}", self.current_user.nickname, "", self.current_user.avatar
-            )
+            await self.create_dm(self.current_user)
             if (channel or self.current_channel).id == DIRECT.id
             else (channel or self.current_channel)
         )
@@ -157,9 +155,7 @@ class Backend(ABC):
 
     async def clear_chat_history(self, channel: Union[Channel, None] = None):
         _target = (
-            Channel(
-                f"private:{self.current_user.id}", self.current_user.nickname, "", self.current_user.avatar
-            )
+            await self.create_dm(self.current_user)
             if (channel or self.current_channel).id == DIRECT.id
             else (channel or self.current_channel)
         )

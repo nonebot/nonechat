@@ -92,15 +92,6 @@ class Sidebar(Widget):
 
     def compose(self):
         with TabbedContent():
-            with TabPane("🤖 机器人列表" if self.is_bot_mode else "👥 用户列表", id="users"):
-                with Vertical(classes="selector-container"):
-                    yield self.user_selector
-                with Vertical(classes="button-container"):
-                    yield Button(
-                        "➕ 添加机器人" if self.is_bot_mode else "➕ 添加用户",
-                        id="add-user",
-                        classes="add-button",
-                    )
             with TabPane("📺 频道列表", id="channels"):
                 with Vertical(classes="selector-container"):
                     yield self.channel_selector
@@ -110,6 +101,15 @@ class Sidebar(Widget):
                         id="add-channel",
                         classes="add-button",
                         disabled=self.is_bot_mode,
+                    )
+            with TabPane("🤖 机器人列表" if self.is_bot_mode else "👥 用户列表", id="users"):
+                with Vertical(classes="selector-container"):
+                    yield self.user_selector
+                with Vertical(classes="button-container"):
+                    yield Button(
+                        "➕ 添加机器人" if self.is_bot_mode else "➕ 添加用户",
+                        id="add-user",
+                        classes="add-button",
                     )
 
     async def on_bot_mode_changed(self, event: "BotModeChanged"):

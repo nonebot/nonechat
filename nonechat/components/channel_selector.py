@@ -50,7 +50,7 @@ class ChannelSelector(Widget):
         self.channel_items: dict[str, tuple[ListItem, tuple[Channel, Optional[User]]]] = {}
         self.check_record: dict[str, float] = {}  # 用于记录频道的最后活动时间
         self.is_bot_mode = self.app.is_bot_mode
-        self._current_channel: Optional[Channel] = None
+        self.current_channel: Optional[Channel] = None
 
     @property
     def app(self) -> "Frontend":
@@ -87,7 +87,6 @@ class ChannelSelector(Widget):
         await channel_list.clear()
         self.channel_items.clear()
 
-        # 普通模式：显示频道列表
         channels_times = [
             (
                 channel,
@@ -106,14 +105,12 @@ class ChannelSelector(Widget):
                 if time != channel._created_at.timestamp():
                     color = (
                         "auto"
-                        if self._current_channel and channel.id == self._current_channel.id
+                        if self.current_channel and channel.id == self.current_channel.id
                         else "lime blink"
                     )
             elif time > self.check_record[channel.id]:
                 color = (
-                    "auto"
-                    if self._current_channel and channel.id == self._current_channel.id
-                    else "lime blink"
+                    "auto" if self.current_channel and channel.id == self.current_channel.id else "lime blink"
                 )
 
             if channel.id.startswith("private:"):
@@ -136,7 +133,7 @@ class ChannelSelector(Widget):
 
             self.channel_items[channel.id] = (item, (channel, orig_user))
             await channel_list.append(item)
-            if self._current_channel and channel.id == self._current_channel.id:
+            if self.current_channel and channel.id == self.current_channel.id:
                 item.highlighted = True
 
     async def on_list_view_selected(self, event: ListView.Selected):
@@ -144,33 +141,28 @@ class ChannelSelector(Widget):
         if event.item and event.item.id and event.item.id.startswith("channel-"):
             # 查找对应的频道
             for item, slots in self.channel_items.values():
+                channel, orig_user = slots
+                if channel.id == DIRECT.id:
+                    ev = ChannelSelectorPressed(
+                        await self.app.backend.create_dm(self.app.backend.current_user),
+                        self.app.backend.current_user,
+                    )
+                else:
+                    ev = ChannelSelectorPressed(channel, orig_user)
                 if item == event.item:
-                    channel, orig_user = slots
-                    self._current_channel = channel  # 更新当前频道
-                    self.check_record[channel.id] = datetime.now().timestamp()  # 更新最后活动时间
                     key = (
                         f"dm-{channel.id[8:]}"
                         if channel.id.startswith("private:")
-                        else (
-                            f"dm-{self.app.backend.current_user.id}"
-                            if channel.id == DIRECT.id
-                            else channel.id
-                        )
+                        else ("dm-direct" if channel.id == DIRECT.id else channel.id)
                     )
                     label = self.query_one(f"#label-{key}", Label)
                     label.update(label.renderable.replace("lime blink", "auto"))  # type: ignore
-                    if channel.id == DIRECT.id:
-                        self.post_message(
-                            ChannelSelectorPressed(
-                                await self.app.backend.create_dm(self.app.backend.current_user),
-                                self.app.backend.current_user,
-                            )
-                        )
-                    else:
-                        self.post_message(ChannelSelectorPressed(channel, orig_user))
+                    self.post_message(ev)
                     item.highlighted = True
+                    self.current_channel = ev.channel
                 else:
                     item.highlighted = False
+                self.check_record[ev.channel.id] = datetime.now().timestamp()  # 更新最后活动时间
 
     async def add_new_channel(self):
         """添加新频道的逻辑"""
