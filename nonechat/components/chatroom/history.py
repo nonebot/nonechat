@@ -8,7 +8,7 @@ from .message import Timer, Message
 
 if TYPE_CHECKING:
     from nonechat.app import Frontend
-    from nonechat.model import StateChange, MessageEvent
+    from nonechat.model import Channel, StateChange, MessageEvent
 
 
 class ChatHistory(Widget):
@@ -48,7 +48,7 @@ class ChatHistory(Widget):
         await self.mount(Message(message))
         self.last_msg = message
 
-        self.scroll_end()
+        self.scroll_end(animate=False)
 
     async def on_state_change(self, event: "StateChange[tuple[MessageEvent, ...]]"):
         await self.on_new_message(event.data)
@@ -65,7 +65,7 @@ class ChatHistory(Widget):
             await cast(Widget, msg).remove()
         await self.app.backend.clear_chat_history()
 
-    async def refresh_history(self):
+    async def refresh_history(self, channel: "Optional[Channel]" = None):
         """刷新聊天历史记录显示"""
         # 清除当前显示的消息
         self.last_msg = None
@@ -74,4 +74,4 @@ class ChatHistory(Widget):
             await cast(Widget, msg).remove()
 
         # 重新加载当前频道的历史记录
-        await self.on_new_message(await self.app.backend.get_chat_history())
+        await self.on_new_message(await self.app.backend.get_chat_history(channel))

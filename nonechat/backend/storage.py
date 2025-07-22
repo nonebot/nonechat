@@ -26,16 +26,22 @@ class MessageStorage:
         """添加新用户"""
         if user.id not in self.users:
             self.users[user.id] = user
+            return True
+        return False
 
     def add_bot(self, bot: Robot):
         """添加新机器人"""
         if bot.id not in self.bots:
             self.bots[bot.id] = bot
+            return True
+        return False
 
     def add_channel(self, channel: Channel):
         """添加新频道"""
         if channel.id not in self.channels:
             self.channels[channel.id] = channel
+            return True
+        return False
 
     def write_chat(self, message: "MessageEvent", channel: Channel) -> None:
         key = channel.id

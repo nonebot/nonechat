@@ -76,7 +76,6 @@ class HorizontalView(Widget):
         self.sidebar = Sidebar()
         self.chatroom = ChatRoom()
         self.log_panel = LogPanel()
-        self.app.bot_mode_watchers.append(self)
 
     @property
     def app(self) -> "Frontend":
@@ -87,6 +86,12 @@ class HorizontalView(Widget):
         yield self.chatroom
         yield self.log_panel
 
+    def on_mount(self):
+        self.app.bot_mode_watchers.append(self)
+
+    def on_unmount(self):
+        self.app.bot_mode_watchers.remove(self)
+
     def on_resize(self, event: Resize):
         self.responsive(event.size.width)
 
@@ -96,17 +101,17 @@ class HorizontalView(Widget):
     async def on_sidebar_user_changed(self, event: SidebarUserChanged):
         """处理用户切换事件"""
         # 刷新聊天室显示
-        await self.chatroom.history.refresh_history()
 
-        if self.app.backend.is_direct:
-            self.chatroom.toolbar.center_title.update(
-                f"{self.app.backend.current_user.nickname}({self.app.backend.current_user.id})"
-            )
+        if self.app.backend.is_direct and not self.app.is_bot_mode:
+            await self.chatroom.history.refresh_history(await self.app.backend.create_dm(event.user))
+            self.chatroom.toolbar.center_title.update(f"{event.user.nickname}({event.user.id})")
+        else:
+            await self.chatroom.history.refresh_history()
 
     async def on_sidebar_channel_changed(self, event: SidebarChannelChanged):
         """处理频道切换事件"""
         # 刷新聊天室显示
-        await self.chatroom.history.refresh_history()
+        await self.chatroom.history.refresh_history(event.channel)
 
         # 更新工具栏标题
         if event.direct:

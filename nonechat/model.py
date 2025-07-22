@@ -9,7 +9,7 @@ from .message import ConsoleMessage
 T = TypeVar("T")
 
 
-@dataclass(frozen=True, eq=True, unsafe_hash=True)
+@dataclass(eq=True, unsafe_hash=True)
 class User:
     """用户"""
 
@@ -17,8 +17,10 @@ class User:
     avatar: str = field(default="👤")
     nickname: str = field(default="User")
 
+    _created_at: datetime = field(default_factory=datetime.now, init=False)
 
-@dataclass(frozen=True, eq=True, unsafe_hash=True)
+
+@dataclass(eq=True, unsafe_hash=True)
 class Robot(User):
     """机器人"""
 
@@ -26,7 +28,7 @@ class Robot(User):
     nickname: str = field(default="Bot")
 
 
-@dataclass(frozen=True, eq=True, unsafe_hash=True)
+@dataclass(eq=True, unsafe_hash=True)
 class Channel:
     """频道信息"""
 
@@ -34,6 +36,8 @@ class Channel:
     name: str
     description: str = ""
     avatar: str = "💬"
+
+    _created_at: datetime = field(default_factory=datetime.now, init=False)
 
 
 @dataclass

@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, cast
 from textual.widget import Widget
 from textual.message import Message
 from textual.containers import Vertical
+from textual.widgets.tabbed_content import ContentTab
 from textual.widgets import Button, TabPane, TabbedContent
 
 from .user_selector import UserSelector, UserSelectorPressed
@@ -26,7 +27,7 @@ class SidebarChannelChanged(Message):
     def __init__(self, channel) -> None:
         super().__init__()
         self.channel = channel
-        self.direct = channel.id == "_direct"
+        self.direct = channel.id.startswith("private:") or channel.id == "_direct"
 
 
 class Sidebar(Widget):
@@ -78,24 +79,38 @@ class Sidebar(Widget):
         self.user_selector = UserSelector()
         self.channel_selector = ChannelSelector()
         self.is_bot_mode = self.app.is_bot_mode
-        self.app.bot_mode_watchers.append(self)
 
     @property
     def app(self) -> "Frontend":
         return cast("Frontend", super().app)
 
+    def on_mount(self):
+        self.app.bot_mode_watchers.append(self)
+
+    def on_unmount(self):
+        self.app.bot_mode_watchers.remove(self)
+
     def compose(self):
         with TabbedContent():
-            with TabPane("👥 用户列表", id="users"):
+            with TabPane("🤖 机器人列表" if self.is_bot_mode else "👥 用户列表", id="users"):
                 with Vertical(classes="selector-container"):
                     yield self.user_selector
                 with Vertical(classes="button-container"):
-                    yield Button("➕ 添加用户", id="add-user", classes="add-button")
+                    yield Button(
+                        "➕ 添加机器人" if self.is_bot_mode else "➕ 添加用户",
+                        id="add-user",
+                        classes="add-button",
+                    )
             with TabPane("📺 频道列表", id="channels"):
                 with Vertical(classes="selector-container"):
                     yield self.channel_selector
                 with Vertical(classes="button-container"):
-                    yield Button("➕ 添加频道", id="add-channel", classes="add-button")
+                    yield Button(
+                        "--" if self.is_bot_mode else "➕ 添加频道",
+                        id="add-channel",
+                        classes="add-button",
+                        disabled=self.is_bot_mode,
+                    )
 
     async def on_bot_mode_changed(self, event: "BotModeChanged"):
         """处理模式切换"""
@@ -104,17 +119,13 @@ class Sidebar(Widget):
         add_user_btn = self.query_one("#add-user", Button)
         # 更新添加用户按钮状态
         add_user_btn.label = "➕ 添加机器人" if self.is_bot_mode else "➕ 添加用户"
-        # tab_users = self.query_one("#users", ContentTab)
-        # tab_users.label = "🤖 机器人列表" if self.is_bot_mode else "👥 用户列表"
+        tab_users = self.query_one(f"#{ContentTab._PREFIX}users", ContentTab)
+        tab_users.label = "🤖 机器人列表" if self.is_bot_mode else "👥 用户列表"
 
         # 更新添加频道按钮状态
         add_channel_btn = self.query_one("#add-channel", Button)
-        if self.is_bot_mode:
-            add_channel_btn.disabled = True
-            add_channel_btn.label = "--"
-        else:
-            add_channel_btn.disabled = False
-            add_channel_btn.label = "➕ 添加频道"
+        add_channel_btn.disabled = self.is_bot_mode
+        add_channel_btn.label = "--" if self.is_bot_mode else "➕ 添加频道"
 
     async def on_button_pressed(self, event: Button.Pressed):
         """处理按钮点击事件"""

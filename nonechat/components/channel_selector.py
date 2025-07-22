@@ -1,12 +1,13 @@
 import random
 import string
+from datetime import datetime
 from typing import TYPE_CHECKING, Optional, cast
 
 from textual.widget import Widget
 from textual.message import Message
 from textual.widgets import Label, ListItem, ListView
 
-from ..model import DIRECT, User, Channel
+from ..model import DIRECT, User, Channel, StateChange, MessageEvent
 
 if TYPE_CHECKING:
     from ..app import Frontend, BotModeChanged
@@ -47,8 +48,9 @@ class ChannelSelector(Widget):
     def __init__(self):
         super().__init__()
         self.channel_items: dict[str, tuple[ListItem, tuple[Channel, Optional[User]]]] = {}
+        self.check_record: dict[str, float] = {}  # 用于记录频道的最后活动时间
         self.is_bot_mode = self.app.is_bot_mode
-        self.app.bot_mode_watchers.append(self)
+        self._current_channel: Optional[Channel] = None
 
     @property
     def app(self) -> "Frontend":
@@ -60,9 +62,16 @@ class ChannelSelector(Widget):
     async def on_mount(self):
         await self.update_channel_list()
         self.app.backend.add_channel_watcher(self)
+        self.app.bot_mode_watchers.append(self)
+        self.app.backend.add_chat_watcher(self)
 
     def on_unmount(self):
         self.app.backend.remove_channel_watcher(self)
+        self.app.bot_mode_watchers.remove(self)
+        self.app.backend.remove_chat_watcher(self)
+
+    async def on_state_change(self, event: "StateChange[tuple[MessageEvent, ...]]"):
+        await self.update_channel_list()
 
     async def on_channel_add(self, event):
         await self.update_channel_list()
@@ -78,59 +87,90 @@ class ChannelSelector(Widget):
         await channel_list.clear()
         self.channel_items.clear()
 
-        if self.is_bot_mode:
-            # Bot 模式：显示用户私聊频道
-            users = await self.app.backend.get_users()
-            for user in users:
-                label = Label(f"{user.avatar} {user.nickname}({user.id})")
-                item = ListItem(label, id=f"channel-dm-{user.id}")
-                # 使用特殊的 channel 来表示用户私聊
-                fake_channel = Channel(f"private:{user.id}", user.nickname, "", user.avatar)
-                self.channel_items[f"dm_{user.id}"] = (item, (fake_channel, user))
-                await channel_list.append(item)
-
-                # 在 bot 模式下，如果当前是 DIRECT 且当前用户是这个用户，则标记为当前
-                if (
-                    self.app.backend.current_channel.id == DIRECT.id
-                    and user.id == self.app.backend.current_user.id
-                ):
-                    item.add_class("current")
-                else:
-                    item.remove_class("current")
         # 普通模式：显示频道列表
-        for channel in await self.app.backend.get_channels():
-            label = Label(f"{channel.avatar} {channel.name}")
-            item = ListItem(label, id=f"channel-{channel.id}")
-            if channel.id == DIRECT.id:
-                if self.is_bot_mode:
-                    continue
-                channel = Channel(
-                    f"private:{self.app.backend.current_user.id}",
-                    self.app.backend.current_user.nickname,
-                    "",
-                    self.app.backend.current_user.avatar,
-                )
-            self.channel_items[channel.id] = (
-                item,
-                (channel, self.app.backend.current_user if channel.id.startswith("private:") else None),
+        channels_times = [
+            (
+                channel,
+                (
+                    event.time.timestamp()
+                    if (event := await self.app.backend.get_latest_chat(channel))
+                    else channel._created_at.timestamp()
+                ),
             )
-            await channel_list.append(item)
+            for channel in await self.app.backend.list_channels(list_users=self.is_bot_mode)
+        ]
+        for channel, time in sorted(channels_times, key=lambda x: x[1], reverse=True):
+            color = "auto"
+            if channel.id not in self.check_record:
+                self.check_record[channel.id] = datetime.now().timestamp()
+                if time != channel._created_at.timestamp():
+                    color = (
+                        "auto"
+                        if self._current_channel and channel.id == self._current_channel.id
+                        else "lime blink"
+                    )
+            elif time > self.check_record[channel.id]:
+                color = (
+                    "auto"
+                    if self._current_channel and channel.id == self._current_channel.id
+                    else "lime blink"
+                )
 
-            # 标记当前频道
-            if channel.id == self.app.backend.current_channel.id:
-                item.add_class("current")
+            if channel.id.startswith("private:"):
+                if not self.is_bot_mode:
+                    label = Label(f"{DIRECT.avatar} [{color}]{DIRECT.name}[/]", id="label-dm-direct")
+                    item = ListItem(label, id="channel-dm-direct")
+                    channel = DIRECT  # 使用 DIRECT 作为私聊频道的标识
+                    orig_user = None
+                else:
+                    label = Label(
+                        f"{channel.avatar} [{color}]{channel.name}({channel.id[8:]})[/]",
+                        id=f"label-dm-{channel.id[8:]}",
+                    )
+                    item = ListItem(label, id=f"channel-dm-{channel.id[8:]}")
+                    orig_user = await self.app.backend.get_user(channel.id[8:])
             else:
-                item.remove_class("current")
+                label = Label(f"{channel.avatar} [{color}]{channel.name}[/]", id=f"label-{channel.id}")
+                item = ListItem(label, id=f"channel-{channel.id}")
+                orig_user = None
+
+            self.channel_items[channel.id] = (item, (channel, orig_user))
+            await channel_list.append(item)
+            if self._current_channel and channel.id == self._current_channel.id:
+                item.highlighted = True
 
     async def on_list_view_selected(self, event: ListView.Selected):
         """处理列表项选择事件"""
-        if event.item and event.item.id:
-            if event.item.id.startswith("channel-"):
-                # 查找对应的频道
-                for item, channel in self.channel_items.values():
-                    if item == event.item:
-                        self.post_message(ChannelSelectorPressed(*channel))
-                        break
+        if event.item and event.item.id and event.item.id.startswith("channel-"):
+            # 查找对应的频道
+            for item, slots in self.channel_items.values():
+                if item == event.item:
+                    channel, orig_user = slots
+                    self._current_channel = channel  # 更新当前频道
+                    self.check_record[channel.id] = datetime.now().timestamp()  # 更新最后活动时间
+                    key = (
+                        f"dm-{channel.id[8:]}"
+                        if channel.id.startswith("private:")
+                        else (
+                            f"dm-{self.app.backend.current_user.id}"
+                            if channel.id == DIRECT.id
+                            else channel.id
+                        )
+                    )
+                    label = self.query_one(f"#label-{key}", Label)
+                    label.update(label.renderable.replace("lime blink", "auto"))  # type: ignore
+                    if channel.id == DIRECT.id:
+                        self.post_message(
+                            ChannelSelectorPressed(
+                                await self.app.backend.create_dm(self.app.backend.current_user),
+                                self.app.backend.current_user,
+                            )
+                        )
+                    else:
+                        self.post_message(ChannelSelectorPressed(channel, orig_user))
+                    item.highlighted = True
+                else:
+                    item.highlighted = False
 
     async def add_new_channel(self):
         """添加新频道的逻辑"""

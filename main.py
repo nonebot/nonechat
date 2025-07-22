@@ -61,7 +61,7 @@ app = Frontend(
         title="Multi-User Chat",
         sub_title="支持多用户和频道的聊天应用",
         room_title="聊天室",
-        icon="🤖",  # 浅色模式背景色
+        icon="💻",  # 浅色模式背景色
         dark_bg_color=Color(40, 44, 52),  # 暗色模式背景色 (更深一些)
         title_color=Color(229, 192, 123),
         header_color=Color(90, 99, 108, 0.6),
@@ -98,7 +98,7 @@ async def on_message(event: MessageEvent):
         )
         await app.send_message(ConsoleMessage([Markdown(help_text)]), event.channel)
     elif message_text == "broadcast":
-        for user in await app.backend.get_users():
+        for user in await app.backend.list_users():
             await app.send_message(ConsoleMessage([Text("测试消息")]), await app.backend.create_dm(user))
     elif message_text == "bell":
         await app.toggle_bell()

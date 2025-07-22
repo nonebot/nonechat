@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, Union
+from typing import TYPE_CHECKING, Any, Union, Optional
 
 from textual.widget import Widget
 from textual.message import Message
@@ -54,16 +54,44 @@ class Backend(ABC):
     def is_direct(self) -> bool:
         return self.current_channel.id.startswith("private:") or self.current_channel.id == DIRECT.id
 
-    async def get_users(self) -> list[User]:
+    async def get_user(self, user_id: str) -> User:
+        if user_id in self.storage.users:
+            return self.storage.users[user_id]
+        if user_id == self.current_user.id:
+            return self.current_user
+        raise ValueError(f"User with ID {user_id} not found in storage.")
+
+    async def get_channel(self, channel_id: str) -> Channel:
+        if channel_id in self.storage.channels:
+            return self.storage.channels[channel_id]
+        if channel_id == DIRECT.id:
+            return DIRECT
+        if channel_id == self.current_channel.id:
+            return self.current_channel
+        raise ValueError(f"Channel with ID {channel_id} not found in storage.")
+
+    async def list_users(self) -> list[User]:
         return list(self.storage.users.values())
 
-    async def get_channels(self) -> list[Channel]:
-        return list(self.storage.channels.values())
+    async def list_channels(self, list_users: bool = False) -> list[Channel]:
+        data = list(self.storage.channels.values())
+        data[0] = await self.create_dm(
+            self.current_user
+        )  # Ensure the first channel is the DM with current user
+        if list_users:
+            data = [
+                (await self.create_dm(user))
+                for user in self.storage.users.values()
+                if user.id != self.current_user.id
+            ] + data
+        return data
 
     async def create_dm(self, user: User):
-        return Channel(f"private:{user.id}", user.nickname, "", user.avatar)
+        chl = Channel(f"private:{user.id}", user.nickname, "", user.avatar)
+        chl._created_at = user._created_at
+        return chl
 
-    async def get_bots(self) -> list[User]:
+    async def list_bots(self) -> list[User]:
         return list(self.storage.bots.values())
 
     async def get_chat_history(self, channel: Union[Channel, None] = None) -> list[MessageEvent]:
@@ -75,6 +103,11 @@ class Backend(ABC):
             else (channel or self.current_channel)
         )
         return self.storage.chat_history(_target)
+
+    async def get_latest_chat(self, channel: Union[Channel, None] = None) -> Optional[MessageEvent]:
+        """获取当前频道的最新聊天消息"""
+        history = await self.get_chat_history(channel)
+        return history[-1] if history else None
 
     def set_user(self, user: User):
         self.current_user = user
@@ -104,19 +137,19 @@ class Backend(ABC):
         self.bot_watchers.remove(watcher)
 
     async def add_user(self, user: User):
-        self.storage.add_user(user)
-        for watcher in self.user_watchers:
-            watcher.post_message(UserAdd(user))
+        if self.storage.add_user(user):
+            for watcher in self.user_watchers:
+                watcher.post_message(UserAdd(user))
 
     async def add_channel(self, channel: Channel):
-        self.storage.add_channel(channel)
-        for watcher in self.channel_wathers:
-            watcher.post_message(ChannelAdd(channel))
+        if self.storage.add_channel(channel):
+            for watcher in self.channel_wathers:
+                watcher.post_message(ChannelAdd(channel))
 
     async def add_bot(self, bot: Robot):
-        self.storage.add_bot(bot)
-        for watcher in self.bot_watchers:
-            watcher.post_message(BotAdd(bot))
+        if self.storage.add_bot(bot):
+            for watcher in self.bot_watchers:
+                watcher.post_message(BotAdd(bot))
 
     async def write_chat(self, message: "MessageEvent", channel: Channel):
         self.storage.write_chat(message, channel)

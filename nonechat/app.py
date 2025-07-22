@@ -19,7 +19,7 @@ from .components.header import Header
 from .message import Text, ConsoleMessage
 from .log_redirect import FakeIO, LogStorage
 from .views.horizontal import HorizontalView
-from .model import Event, Channel, MessageEvent
+from .model import Event, Robot, Channel, MessageEvent
 
 TB = TypeVar("TB", bound=Backend, default=Backend)
 
@@ -92,50 +92,48 @@ class Frontend(App, Generic[TB]):
             sys.stderr = self._origin_stderr
         await self.backend.on_console_unmount()
 
-    async def send_message(self, message: ConsoleMessage, channel: Union[Channel, None] = None):
+    async def send_message(
+        self,
+        content: ConsoleMessage,
+        channel: Union[Channel, None] = None,
+        bot: Union[Robot, None] = None,
+    ):
         """发送消息到当前频道或指定频道"""
         target = channel or self.backend.current_channel
-        if not self.is_bot_mode and target.id != self.backend.current_channel.id:
-            if not target.id.startswith("private:"):
-                self.notify(
-                    f"Message from {target.name}({target.id}): {message!s}",
-                    title="New Message",
-                    timeout=1,
-                )
-            elif target.id == f"private:{self.backend.current_user.id}":
-                self.notify(
-                    f"Message from {self.backend.current_bot.nickname}: {message!s}",
-                    title="New Message",
-                    timeout=1,
-                )
+        if (
+            not self.is_bot_mode
+            and target.id != self.backend.current_channel.id
+            and target.id == f"private:{self.backend.current_user.id}"
+        ):
+            self.notify(
+                f"Message from {(bot or self.backend.current_bot).nickname}: {content!s}",
+                title="New Message",
+                timeout=1,
+            )
 
         msg = MessageEvent(
             time=datetime.now(),
-            self_id=self.backend.current_bot.id,
+            self_id=(bot or self.backend.current_bot).id,
             type="console.message",
-            user=self.backend.current_bot,
-            message=message,
+            user=(bot or self.backend.current_bot),
+            message=content,
             channel=target,
         )
         await self.backend.write_chat(msg, target)
 
     async def receive_message(self, message: "MessageEvent"):
         """接收消息"""
-        if message.channel.id != self.backend.current_channel.id:
-            if not message.channel.id.startswith("private:"):
-                self.notify(
-                    f"Message from {message.channel.name}({message.channel.id}): {message.message!s}",
-                    title="New Message",
-                )
-            elif message.channel.id == f"private:{self.backend.current_user.id}":
-                self.notify(
-                    f"Message from {self.backend.current_bot.nickname}: {message.message!s}",
-                    title="New Message",
-                )
+        if (
+            message.channel.id != self.backend.current_channel.id
+            and message.channel.id == f"private:{self.backend.current_user.id}"
+        ):
+            self.notify(
+                f"Message from {self.backend.current_bot.nickname}: {message.message!s}",
+                title="New Message",
+            )
         await self.backend.add_user(message.user)
         await self.backend.add_channel(message.channel)
         await self.backend.write_chat(message, message.channel)
-        await self.backend.post_event(message)
 
     async def toggle_bell(self):
         await self.run_action("bell")

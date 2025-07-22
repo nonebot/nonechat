@@ -1,6 +1,6 @@
 import random
 import string
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Optional, cast
 
 from textual.widget import Widget
 from textual.message import Message
@@ -48,7 +48,7 @@ class UserSelector(Widget):
         super().__init__()
         self.user_items: dict[str, tuple[ListItem, User]] = {}
         self.is_bot_mode = self.app.is_bot_mode
-        self.app.bot_mode_watchers.append(self)
+        self._current_user: Optional[User] = None
 
     @property
     def app(self) -> "Frontend":
@@ -61,10 +61,12 @@ class UserSelector(Widget):
         await self.update_user_list()
         self.app.backend.add_user_watcher(self)
         self.app.backend.add_bot_watcher(self)
+        self.app.bot_mode_watchers.append(self)
 
     def on_unmount(self):
         self.app.backend.remove_user_watcher(self)
         self.app.backend.remove_bot_watcher(self)
+        self.app.bot_mode_watchers.remove(self)
 
     async def on_user_add(self, event):
         await self.update_user_list()
@@ -86,11 +88,11 @@ class UserSelector(Widget):
         # 根据模式显示不同的列表
         if self.is_bot_mode:
             # Bot 模式：显示 bot 列表
-            users = await self.app.backend.get_bots()
+            users = await self.app.backend.list_bots()
             current_user_id = self.app.backend.current_bot.id
         else:
             # 普通模式：显示用户列表
-            users = await self.app.backend.get_users()
+            users = await self.app.backend.list_users()
             current_user_id = self.app.backend.current_user.id
 
         for user in users:
@@ -100,10 +102,8 @@ class UserSelector(Widget):
             await user_list.append(item)
 
             # 标记当前用户/bot
-            if user.id == current_user_id:
-                item.add_class("current")
-            else:
-                item.remove_class("current")
+            if self._current_user and user.id == current_user_id:
+                item.highlighted = True
 
     async def on_list_view_selected(self, event: ListView.Selected):
         """处理列表项选择事件"""
@@ -112,7 +112,9 @@ class UserSelector(Widget):
             for item, user in self.user_items.values():
                 if item == event.item:
                     self.post_message(UserSelectorPressed(user))
-                    break
+                    item.highlighted = True
+                else:
+                    item.highlighted = False
 
     async def add_new_user(self):
         """添加新用户的逻辑"""

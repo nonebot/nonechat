@@ -28,3 +28,5 @@ class ConsoleSetting:
     user_name: str = "User"
     bot_avatar: str = "🤖"
     bot_name: str = "Bot"
+
+    new_message_color: str = "lime blink"
