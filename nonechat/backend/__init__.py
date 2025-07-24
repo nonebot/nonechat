@@ -123,6 +123,15 @@ class Backend(ABC):
         history = await self.get_chat_history(channel)
         return history[-1] if history else None
 
+    async def get_chat(self, message_id: str, channel: Union[Channel, None] = None) -> Optional[MessageEvent]:
+        """获取指定消息ID的聊天消息"""
+        _target = (
+            await self.create_dm(self.current_user)
+            if (channel or self.current_channel).id == DIRECT.id
+            else (channel or self.current_channel)
+        )
+        return self.storage.get_chat(message_id, _target)
+
     def set_user(self, user: User):
         self.current_user = user
 

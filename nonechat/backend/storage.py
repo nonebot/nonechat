@@ -1,3 +1,4 @@
+from typing import Optional
 from secrets import token_hex
 from dataclasses import field, dataclass
 
@@ -73,6 +74,12 @@ class MessageStorage:
                 current_history[message_id].message = content
                 return True
         return False
+
+    def get_chat(self, message_id: str, channel: Channel) -> Optional[MessageEvent]:
+        """获取当前频道的聊天消息"""
+        if channel.id in self._chat_history:
+            return self._chat_history[channel.id].get(message_id, None)
+        return None
 
     def clear_chat_history(self, channel: Channel):
         """清空当前频道的聊天历史"""

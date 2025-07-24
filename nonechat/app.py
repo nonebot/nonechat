@@ -140,7 +140,9 @@ class Frontend(App, Generic[TB]):
         channel = channel or self.backend.current_channel
         return await self.backend.remove_chat(message_id, channel)
 
-    async def edit_message(self, message_id: str, content: ConsoleMessage, channel: Union[Channel, None] = None):
+    async def edit_message(
+        self, message_id: str, content: ConsoleMessage, channel: Union[Channel, None] = None
+    ):
         """编辑消息"""
         channel = channel or self.backend.current_channel
         return await self.backend.edit_chat(message_id, content, channel)

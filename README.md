@@ -29,6 +29,13 @@ app = Frontend(ExampleBackend)
 app.run()
 ```
 
+## 功能
+
+- 消息发生、编辑与撤回
+- 日志查看窗口
+- 用户管理
+- 频道管理
+
 ## 预览
 
 ![](./view.png)
