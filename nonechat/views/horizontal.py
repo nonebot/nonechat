@@ -9,7 +9,7 @@ from ..components.chatroom import ChatRoom
 from ..components.sidebar import Sidebar, SidebarUserChanged, SidebarChannelChanged
 
 if TYPE_CHECKING:
-    from ..app import Frontend, BotModeChanged
+    from ..app import Frontend
 
 SHOW_LOG_BREAKPOINT = 125
 
@@ -87,17 +87,10 @@ class HorizontalView(Widget):
         yield self.log_panel
 
     def on_mount(self):
-        self.app.bot_mode_watchers.append(self)
         self.chatroom.toolbar.title = self.app.backend.current_channel.name
-
-    def on_unmount(self):
-        self.app.bot_mode_watchers.remove(self)
 
     def on_resize(self, event: Resize):
         self.responsive(event.size.width)
-
-    async def on_bot_mode_changed(self, event: "BotModeChanged"):
-        await self.chatroom.history.refresh_history()
 
     async def on_sidebar_user_changed(self, event: SidebarUserChanged):
         """处理用户切换事件"""
