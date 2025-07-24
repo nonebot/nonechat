@@ -21,6 +21,22 @@ class UserSelectorPressed(Message):
         self.user = user
 
 
+class _store:
+    _current_user: Optional[User] = None
+    _current_bot: Optional[Robot] = None
+
+    @classmethod
+    def get_current_user(cls, is_bot_mode: bool) -> Optional[User]:
+        return cls._current_bot if is_bot_mode else cls._current_user
+
+    @classmethod
+    def set_current_user(cls, user: User, is_bot_mode: bool = False):
+        if is_bot_mode:
+            cls._current_bot = user  # type: ignore
+        else:
+            cls._current_user = user
+
+
 class UserSelector(Widget):
     """用户选择器组件"""
 
@@ -48,7 +64,6 @@ class UserSelector(Widget):
         super().__init__()
         self.user_items: dict[str, tuple[ListItem, User]] = {}
         self.is_bot_mode = self.app.is_bot_mode
-        self._current_user: Optional[User] = None
 
     @property
     def app(self) -> "Frontend":
@@ -58,6 +73,8 @@ class UserSelector(Widget):
         yield ListView(id="user-list")
 
     async def on_mount(self):
+        _store._current_user = self.app.backend.current_user
+        _store._current_bot = self.app.backend.current_bot
         await self.update_user_list()
         self.app.backend.add_user_watcher(self)
         self.app.backend.add_bot_watcher(self)
@@ -89,11 +106,9 @@ class UserSelector(Widget):
         if self.is_bot_mode:
             # Bot 模式：显示 bot 列表
             users = await self.app.backend.list_bots()
-            current_user_id = self.app.backend.current_bot.id
         else:
             # 普通模式：显示用户列表
             users = await self.app.backend.list_users()
-            current_user_id = self.app.backend.current_user.id
 
         for user in users:
             label = Label(f"{user.avatar} {user.nickname}")
@@ -101,8 +116,9 @@ class UserSelector(Widget):
             self.user_items[user.id] = (item, user)
             await user_list.append(item)
 
+            current_user = _store.get_current_user(self.is_bot_mode)
             # 标记当前用户/bot
-            if self._current_user and user.id == current_user_id:
+            if current_user and user.id == current_user.id:
                 item.highlighted = True
 
     async def on_list_view_selected(self, event: ListView.Selected):
@@ -113,6 +129,7 @@ class UserSelector(Widget):
                 if item == event.item:
                     self.post_message(UserSelectorPressed(user))
                     item.highlighted = True
+                    _store.set_current_user(user, self.is_bot_mode)
                 else:
                     item.highlighted = False
 

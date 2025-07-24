@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, cast
 
 from textual.widget import Widget
-from textual.widgets import Static
+from textual.reactive import Reactive
 
 from nonechat.router import RouteChange
 
@@ -12,6 +12,13 @@ if TYPE_CHECKING:
     from nonechat.views.horizontal import HorizontalView
 
     from .history import ChatHistory
+
+
+class RoomTitle(Widget):
+    title: Reactive[str] = Reactive("Chat")
+
+    def render(self):
+        return self.title
 
 
 class Toolbar(Widget):
@@ -28,7 +35,7 @@ class Toolbar(Widget):
         padding: 0 1;
     }
 
-    Toolbar Static {
+    Toolbar RoomTitle {
         width: 100%;
         content-align: center middle;
     }
@@ -43,6 +50,7 @@ class Toolbar(Widget):
         margin-right: 4;
     }
     """
+    title: Reactive[str] = Reactive("Chat")
 
     @property
     def app(self) -> "Frontend":
@@ -54,7 +62,7 @@ class Toolbar(Widget):
         self.toggle_sidebar_button = Action(setting.toolbar_fold, id="toggle-sidebar", classes="left")
         self.exit_button = Action(setting.toolbar_exit, id="exit", classes="left ml")
 
-        self.center_title = Static(setting.room_title, classes="center")
+        self.center_title = RoomTitle()
         # self.settings_button = Action(setting.toolbar_setting, id="settings", classes="right mr")
         self.clear_button = Action(setting.toolbar_clear, id="clear", classes="right mr")
         self.log_button = Action(setting.toolbar_log, id="log", classes="right")
@@ -63,7 +71,7 @@ class Toolbar(Widget):
         yield self.exit_button
         yield self.toggle_sidebar_button
 
-        yield self.center_title
+        yield self.center_title.data_bind(Toolbar.title)
 
         # yield self.settings_button
         yield self.clear_button

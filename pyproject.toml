@@ -29,6 +29,9 @@ dev = [
 [tool.pdm.build]
 includes = ["nonechat"]
 
+[tool.pdm.scripts]
+format = { composite = ["isort .", "black .", "ruff check ."] }
+
 [tool.black]
 line-length = 110
 target-version = ["py39", "py310", "py311", "py312"]

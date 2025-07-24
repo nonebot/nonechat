@@ -1,3 +1,4 @@
+from warnings import warn
 from typing import Optional
 from dataclasses import dataclass
 
@@ -8,7 +9,7 @@ from textual.color import Color
 class ConsoleSetting:
     title: str = "Console"
     sub_title: str = "powered by Textual"
-    room_title: str = "Chat"
+    room_title: Optional[str] = None
     title_color: Optional[Color] = None
     icon: Optional[str] = None
     icon_color: Optional[Color] = None
@@ -30,3 +31,11 @@ class ConsoleSetting:
     bot_name: str = "Bot"
 
     new_message_color: str = "lime blink"
+
+    def __post_init__(self):
+        if self.room_title is not None:
+            warn(
+                "room_title is deprecated.",
+                UserWarning,
+                stacklevel=3,
+            )

@@ -88,6 +88,7 @@ class HorizontalView(Widget):
 
     def on_mount(self):
         self.app.bot_mode_watchers.append(self)
+        self.chatroom.toolbar.title = self.app.backend.current_channel.name
 
     def on_unmount(self):
         self.app.bot_mode_watchers.remove(self)
@@ -104,7 +105,7 @@ class HorizontalView(Widget):
 
         if self.app.backend.is_direct and not self.app.is_bot_mode:
             await self.chatroom.history.refresh_history(await self.app.backend.create_dm(event.user))
-            self.chatroom.toolbar.center_title.update(f"{event.user.nickname}({event.user.id})")
+            self.chatroom.toolbar.title = f"{event.user.nickname}({event.user.id})"
         else:
             await self.chatroom.history.refresh_history()
 
@@ -115,11 +116,11 @@ class HorizontalView(Widget):
 
         # 更新工具栏标题
         if event.direct:
-            self.chatroom.toolbar.center_title.update(
+            self.chatroom.toolbar.title = (
                 f"{self.app.backend.current_user.nickname}({self.app.backend.current_user.id})"
             )
         else:
-            self.chatroom.toolbar.center_title.update(event.channel.name)
+            self.chatroom.toolbar.title = event.channel.name
 
     def watch_can_show_log(self, can_show_log: bool):
         self._toggle_log_panel()

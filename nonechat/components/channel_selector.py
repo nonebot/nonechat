@@ -22,6 +22,13 @@ class ChannelSelectorPressed(Message):
         self.orig_user = orig_user  # 原始用户，用于私聊频道的处理
 
 
+class _store:
+    """存储当前用户的状态"""
+
+    check_record: dict[str, float] = {}  # 用于记录频道的最后活动时间
+    current_channel: Channel = DIRECT  # 默认频道为 DIRECT
+
+
 class ChannelSelector(Widget):
     """频道选择器组件"""
 
@@ -48,9 +55,7 @@ class ChannelSelector(Widget):
     def __init__(self):
         super().__init__()
         self.channel_items: dict[str, tuple[ListItem, tuple[Channel, Optional[User]]]] = {}
-        self.check_record: dict[str, float] = {}  # 用于记录频道的最后活动时间
         self.is_bot_mode = self.app.is_bot_mode
-        self.current_channel: Optional[Channel] = None
 
     @property
     def app(self) -> "Frontend":
@@ -60,6 +65,7 @@ class ChannelSelector(Widget):
         yield ListView(id="channel-list")
 
     async def on_mount(self):
+        _store.current_channel = self.app.backend.current_channel
         await self.update_channel_list()
         self.app.backend.add_channel_watcher(self)
         self.app.bot_mode_watchers.append(self)
@@ -100,17 +106,19 @@ class ChannelSelector(Widget):
         ]
         for channel, time in sorted(channels_times, key=lambda x: x[1], reverse=True):
             color = "auto"
-            if channel.id not in self.check_record:
-                self.check_record[channel.id] = datetime.now().timestamp()
+            if channel.id not in _store.check_record:
+                _store.check_record[channel.id] = datetime.now().timestamp()
                 if time != channel._created_at.timestamp():
                     color = (
                         "auto"
-                        if self.current_channel and channel.id == self.current_channel.id
+                        if _store.current_channel and channel.id == _store.current_channel.id
                         else "lime blink"
                     )
-            elif time > self.check_record[channel.id]:
+            elif time > _store.check_record[channel.id]:
                 color = (
-                    "auto" if self.current_channel and channel.id == self.current_channel.id else "lime blink"
+                    "auto"
+                    if _store.current_channel and channel.id == _store.current_channel.id
+                    else "lime blink"
                 )
 
             if channel.id.startswith("private:"):
@@ -133,7 +141,7 @@ class ChannelSelector(Widget):
 
             self.channel_items[channel.id] = (item, (channel, orig_user))
             await channel_list.append(item)
-            if self.current_channel and channel.id == self.current_channel.id:
+            if _store.current_channel and channel.id == _store.current_channel.id:
                 item.highlighted = True
 
     async def on_list_view_selected(self, event: ListView.Selected):
@@ -159,10 +167,10 @@ class ChannelSelector(Widget):
                     label.update(label.renderable.replace("lime blink", "auto"))  # type: ignore
                     self.post_message(ev)
                     item.highlighted = True
-                    self.current_channel = ev.channel
+                    _store.current_channel = ev.channel
                 else:
                     item.highlighted = False
-                self.check_record[ev.channel.id] = datetime.now().timestamp()  # 更新最后活动时间
+                _store.check_record[ev.channel.id] = datetime.now().timestamp()  # 更新最后活动时间
 
     async def add_new_channel(self):
         """添加新频道的逻辑"""
