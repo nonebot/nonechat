@@ -8,6 +8,7 @@ from .message import Timer, Message
 
 if TYPE_CHECKING:
     from nonechat.app import Frontend
+    from nonechat.backend import MessageChanged, MessageDeleted
     from nonechat.model import Channel, StateChange, MessageEvent
 
 
@@ -75,3 +76,14 @@ class ChatHistory(Widget):
 
         # 重新加载当前频道的历史记录
         await self.on_new_message(await self.app.backend.get_chat_history(channel))
+
+    async def on_message_deleted(self, event: "MessageDeleted"):
+        for msg in self.walk_children():
+            if isinstance(msg, Message) and msg.event.message_id == event.message_id:
+                await cast(Widget, msg).remove()
+
+    def on_message_changed(self, event: "MessageChanged"):
+        for msg in self.walk_children():
+            if isinstance(msg, Message) and msg.event.message_id == event.message_id:
+                msg.content = event.content
+                msg.refresh(layout=True, recompose=True)

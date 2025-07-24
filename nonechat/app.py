@@ -110,16 +110,16 @@ class Frontend(App, Generic[TB]):
                 title="New Message",
                 timeout=1,
             )
-
         msg = MessageEvent(
             time=datetime.now(),
             self_id=(bot or self.backend.current_bot).id,
             type="console.message",
             user=(bot or self.backend.current_bot),
+            message_id="_unset_",
             message=content,
             channel=target,
         )
-        await self.backend.write_chat(msg, target)
+        return await self.backend.write_chat(msg, target)
 
     async def receive_message(self, message: "MessageEvent"):
         """接收消息"""
@@ -133,7 +133,17 @@ class Frontend(App, Generic[TB]):
             )
         await self.backend.add_user(message.user)
         await self.backend.add_channel(message.channel)
-        await self.backend.write_chat(message, message.channel)
+        return await self.backend.write_chat(message, message.channel)
+
+    async def recall_message(self, message_id: str, channel: Union[Channel, None] = None):
+        """撤回消息"""
+        channel = channel or self.backend.current_channel
+        return await self.backend.remove_chat(message_id, channel)
+
+    async def edit_message(self, message_id: str, content: ConsoleMessage, channel: Union[Channel, None] = None):
+        """编辑消息"""
+        channel = channel or self.backend.current_channel
+        return await self.backend.edit_chat(message_id, content, channel)
 
     async def toggle_bell(self):
         await self.run_action("bell")
@@ -148,16 +158,18 @@ class Frontend(App, Generic[TB]):
             self_id=self.backend.current_bot.id,
             type="console.message",
             user=self.backend.current_bot if self.is_bot_mode else self.backend.current_user,
+            message_id="_unset_",
             message=ConsoleMessage([Text(message)]),
             channel=self.backend.current_channel,
         )
-        await self.backend.write_chat(
+        ans = await self.backend.write_chat(
             msg,
             self.backend.current_channel,
         )
         # 在普通模式下触发 post_event
         if not self.is_bot_mode:
             await self.backend.post_event(msg)
+        return ans
 
     async def action_post_event(self, event: Event):
         await self.backend.post_event(event)

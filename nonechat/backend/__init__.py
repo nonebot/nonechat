@@ -5,6 +5,7 @@ from textual.widget import Widget
 from textual.message import Message
 
 from .storage import MessageStorage
+from ..message import ConsoleMessage
 from ..model import DIRECT, User, Event, Robot, Channel, StateChange, MessageEvent
 
 if TYPE_CHECKING:
@@ -27,6 +28,21 @@ class ChannelAdd(Message, bubble=False):
     def __init__(self, channel: Channel) -> None:
         super().__init__()
         self.channel = channel
+
+
+class MessageDeleted(Message, bubble=False):
+    def __init__(self, message_id: str, channel: Channel) -> None:
+        super().__init__()
+        self.message_id = message_id
+        self.channel = channel
+
+
+class MessageChanged(Message, bubble=False):
+    def __init__(self, message_id: str, content: ConsoleMessage, channel: Channel) -> None:
+        super().__init__()
+        self.message_id = message_id
+        self.channel = channel
+        self.content = content
 
 
 class Backend(ABC):
@@ -150,8 +166,19 @@ class Backend(ABC):
                 watcher.post_message(BotAdd(bot))
 
     async def write_chat(self, message: "MessageEvent", channel: Channel):
-        self.storage.write_chat(message, channel)
+        msg_id = self.storage.write_chat(message, channel)
         self.emit_chat_watcher(message)
+        return msg_id
+
+    async def remove_chat(self, message_id: str, channel: Channel):
+        self.storage.remove_chat(message_id, channel)
+        for watcher in self.chat_watchers:
+            watcher.post_message(MessageDeleted(message_id, channel))
+
+    async def edit_chat(self, message_id: str, content: ConsoleMessage, channel: Channel):
+        if self.storage.edit_chat(message_id, content, channel):
+            for watcher in self.chat_watchers:
+                watcher.post_message(MessageChanged(message_id, content, channel))
 
     async def clear_chat_history(self, channel: Union[Channel, None] = None):
         _target = (

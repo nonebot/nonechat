@@ -1,6 +1,6 @@
 import sys
 from inspect import cleandoc
-from asyncio import gather, create_task
+from asyncio import sleep, gather, create_task
 
 from loguru import logger
 from textual.color import Color
@@ -106,6 +106,37 @@ async def on_message(event: MessageEvent):
         with open("./README.md", encoding="utf-8") as md_file:
             md_text = md_file.read()
         await app.send_message(ConsoleMessage([Markdown(md_text)]), event.channel)
+    elif message_text == "recall":
+        msg_id = await app.send_message(ConsoleMessage([Text("这条消息将被撤回")]), event.channel)
+        await sleep(3)
+        await app.recall_message(msg_id, event.channel)
+    elif message_text == "倒计时":
+        msg_id = await app.send_message(ConsoleMessage([Text("倒计时开始")]), event.channel)
+        await sleep(1)
+        for i in range(5, 0, -1):
+            await app.edit_message(
+                msg_id,
+                ConsoleMessage([Text(f"倒计时: {i}秒")]),
+                event.channel,
+            )
+            await sleep(1)
+        await app.edit_message(
+            msg_id,
+            ConsoleMessage([Text("时间到!")]),
+            event.channel,
+        )
+    elif message_text == "stream":
+        content = "这是一个用消息编辑模拟的流式消息\n正在打字..."
+        msg_id = await app.send_message(ConsoleMessage([Text(content[0])]), event.channel)
+        out = content[0]
+        for char in content[1:]:
+            out += char
+            await sleep(0.6 if char == "\n" else 0.3)  # 模拟打字延迟
+            await app.edit_message(
+                msg_id,
+                ConsoleMessage([Text(out)]),
+                event.channel,
+            )
     else:
         # 在不同频道中有不同的回复
         channel_name = app.backend.current_channel.name

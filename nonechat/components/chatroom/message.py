@@ -68,19 +68,20 @@ class Message(Widget):
         return cast("Frontend", super().app)
 
     def __init__(self, event: "MessageEvent"):
-        self.event = event
         if self.app.is_bot_mode:
             self.side = Side.RIGHT if event.user.id == self.app.backend.current_bot.id else Side.LEFT
         else:
             self.side = Side.RIGHT if event.user.id == self.app.backend.current_user.id else Side.LEFT
         super().__init__(classes="left -hidden" if self.side == Side.LEFT else "right -hidden")
+        self.event = event
+        self.content = event.message
 
     def compose(self):
         if self.side == Side.LEFT:
             yield MessageAvatar(self.event.user)
-            yield MessageInfo(self.event.user.nickname, self.event.message, self.side)
+            yield MessageInfo(self.event.user.nickname, self.content, self.side)
         else:
-            yield MessageInfo(self.event.user.nickname, self.event.message, self.side)
+            yield MessageInfo(self.event.user.nickname, self.content, self.side)
             yield MessageAvatar(self.event.user)
 
     def on_show(self):
@@ -157,10 +158,10 @@ class BubbleWrapper(Widget):
 
     def __init__(self, renderable: RenderableType, side: Side):
         super().__init__(classes="left" if side == Side.LEFT else "right")
-        self.renderable = renderable
+        self.content = renderable
 
     def compose(self):
-        yield Bubble(self.renderable)
+        yield Bubble(self.content)
 
 
 class Bubble(Widget):
@@ -181,7 +182,7 @@ class Bubble(Widget):
 
     def __init__(self, renderable: RenderableType):
         super().__init__()
-        self.renderable = renderable
+        self.content = renderable
 
     def render(self):
-        return self.renderable
+        return self.content

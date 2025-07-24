@@ -1,5 +1,7 @@
+from secrets import token_hex
 from dataclasses import field, dataclass
 
+from ..message import ConsoleMessage
 from ..model import DIRECT, User, Robot, Channel, MessageEvent
 
 MAX_MSG_RECORDS = 500
@@ -13,14 +15,14 @@ class MessageStorage:
     bots: dict[str, Robot] = field(default_factory=dict)
 
     # 按频道分组的聊天历史记录
-    _chat_history: dict[str, list[MessageEvent]] = field(default_factory=dict)
+    _chat_history: dict[str, dict[str, MessageEvent]] = field(default_factory=dict)
 
     def __post_init__(self):
         self.channels[DIRECT.id] = DIRECT  # 添加默认的 DIRECT 频道
 
     def chat_history(self, channel: Channel) -> list[MessageEvent]:
         """获取当前频道的聊天历史"""
-        return self._chat_history.get(channel.id, [])
+        return list(self._chat_history.get(channel.id, {}).values())
 
     def add_user(self, user: User):
         """添加新用户"""
@@ -43,15 +45,34 @@ class MessageStorage:
             return True
         return False
 
-    def write_chat(self, message: "MessageEvent", channel: Channel) -> None:
+    def write_chat(self, message: "MessageEvent", channel: Channel) -> str:
         key = channel.id
         if key not in self._chat_history:
-            self._chat_history[key] = []
+            self._chat_history[key] = {}
+        if message.message_id == "_unset_":
+            message_id = token_hex(8)
+            message.message_id = message_id
+        else:
+            message_id = message.message_id
         current_history = self._chat_history[key]
-        current_history.append(message)
+        current_history[message_id] = message
         # 限制历史记录数量
         if len(current_history) > MAX_MSG_RECORDS:
-            self._chat_history[key] = current_history[-MAX_MSG_RECORDS:]
+            self._chat_history[key] = dict(list(current_history.items())[-MAX_MSG_RECORDS:])
+        return message_id
+
+    def remove_chat(self, message_id: str, channel: Channel):
+        if channel.id in self._chat_history:
+            self._chat_history[channel.id].pop(message_id, None)
+
+    def edit_chat(self, message_id: str, content: ConsoleMessage, channel: Channel):
+        """编辑当前频道的聊天消息"""
+        if channel.id in self._chat_history:
+            current_history = self._chat_history[channel.id]
+            if message_id in current_history:
+                current_history[message_id].message = content
+                return True
+        return False
 
     def clear_chat_history(self, channel: Channel):
         """清空当前频道的聊天历史"""

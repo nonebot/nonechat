@@ -51,6 +51,7 @@ class Event:
 
 @dataclass
 class MessageEvent(Event):
+    message_id: str
     message: ConsoleMessage
 
 

@@ -138,6 +138,7 @@ if __name__ == "__main__":
             type="console.message",
             user=user,
             message=message,
+            message_id="test_message_1",
             channel=channel,
         )
         await app.receive_message(event)
@@ -155,6 +156,7 @@ if __name__ == "__main__":
                 type="console.message",
                 user=user,
                 message=message,
+                message_id=f"test_message_{datetime.now().timestamp()}",
                 channel=channel,
             )
             await app.receive_message(event)
