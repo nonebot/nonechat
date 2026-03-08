@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, Union, Optional
+from typing import TYPE_CHECKING, Any
 
 from textual.widget import Widget
 from textual.message import Message
@@ -57,9 +57,7 @@ class Backend(ABC):
             self.frontend.setting.bot_name,
         )
         self.storage = MessageStorage()
-        self.current_user = User(
-            "console", self.frontend.setting.user_avatar, self.frontend.setting.user_name
-        )
+        self.current_user = User("console", self.frontend.setting.user_avatar, self.frontend.setting.user_name)
         self.current_channel = Channel("general", "通用", "默认聊天频道", "💬")
         self.chat_watchers: list[Widget] = []
         self.user_watchers: list[Widget] = []
@@ -95,9 +93,7 @@ class Backend(ABC):
         users = [await self.create_dm(self.current_user)]
         if list_users:
             users += [
-                await self.create_dm(user)
-                for user in self.storage.users.values()
-                if user.id != self.current_user.id
+                await self.create_dm(user) for user in self.storage.users.values() if user.id != self.current_user.id
             ]
         users.sort(key=lambda x: x._created_at.timestamp(), reverse=True)
         return users + data
@@ -110,7 +106,7 @@ class Backend(ABC):
     async def list_bots(self) -> list[User]:
         return list(self.storage.bots.values())
 
-    async def get_chat_history(self, channel: Union[Channel, None] = None) -> list[MessageEvent]:
+    async def get_chat_history(self, channel: Channel | None = None) -> list[MessageEvent]:
         _target = (
             await self.create_dm(self.current_user)
             if (channel or self.current_channel).id == DIRECT.id
@@ -118,12 +114,12 @@ class Backend(ABC):
         )
         return self.storage.chat_history(_target)
 
-    async def get_latest_chat(self, channel: Union[Channel, None] = None) -> Optional[MessageEvent]:
+    async def get_latest_chat(self, channel: Channel | None = None) -> MessageEvent | None:
         """获取当前频道的最新聊天消息"""
         history = await self.get_chat_history(channel)
         return history[-1] if history else None
 
-    async def get_chat(self, message_id: str, channel: Union[Channel, None] = None) -> Optional[MessageEvent]:
+    async def get_chat(self, message_id: str, channel: Channel | None = None) -> MessageEvent | None:
         """获取指定消息ID的聊天消息"""
         _target = (
             await self.create_dm(self.current_user)
@@ -189,7 +185,7 @@ class Backend(ABC):
             for watcher in self.chat_watchers:
                 watcher.post_message(MessageChanged(message_id, content, channel))
 
-    async def clear_chat_history(self, channel: Union[Channel, None] = None):
+    async def clear_chat_history(self, channel: Channel | None = None):
         _target = (
             await self.create_dm(self.current_user)
             if (channel or self.current_channel).id == DIRECT.id

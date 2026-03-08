@@ -1,7 +1,7 @@
 import random
 import string
 from datetime import datetime
-from typing import TYPE_CHECKING, Optional, cast
+from typing import TYPE_CHECKING, cast
 
 from textual.widget import Widget
 from textual.message import Message
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 class ChannelSelectorPressed(Message):
     """频道选择器按钮被按下时发送的消息"""
 
-    def __init__(self, channel: Channel, orig_user: Optional[User]) -> None:
+    def __init__(self, channel: Channel, orig_user: User | None) -> None:
         super().__init__()
         self.channel = channel
         self.orig_user = orig_user  # 原始用户，用于私聊频道的处理
@@ -54,7 +54,7 @@ class ChannelSelector(Widget):
 
     def __init__(self):
         super().__init__()
-        self.channel_items: dict[str, tuple[ListItem, tuple[Channel, Optional[User]]]] = {}
+        self.channel_items: dict[str, tuple[ListItem, tuple[Channel, User | None]]] = {}
         self.is_bot_mode = self.app.is_bot_mode
 
     @property
@@ -110,16 +110,10 @@ class ChannelSelector(Widget):
                 _store.check_record[channel.id] = datetime.now().timestamp()
                 if time != channel._created_at.timestamp():
                     color = (
-                        "auto"
-                        if _store.current_channel and channel.id == _store.current_channel.id
-                        else "lime blink"
+                        "auto" if _store.current_channel and channel.id == _store.current_channel.id else "lime blink"
                     )
             elif time > _store.check_record[channel.id]:
-                color = (
-                    "auto"
-                    if _store.current_channel and channel.id == _store.current_channel.id
-                    else "lime blink"
-                )
+                color = "auto" if _store.current_channel and channel.id == _store.current_channel.id else "lime blink"
 
             if channel.id.startswith("private:"):
                 if not self.is_bot_mode:
@@ -164,7 +158,7 @@ class ChannelSelector(Widget):
                         else ("dm-direct" if channel.id == DIRECT.id else channel.id)
                     )
                     label = self.query_one(f"#label-{key}", Label)
-                    label.update(label.renderable.replace("lime blink", "auto"))  # type: ignore
+                    label.update(label.content.replace("lime blink", "auto"))  # type: ignore
                     self.post_message(ev)
                     item.highlighted = True
                     _store.current_channel = ev.channel

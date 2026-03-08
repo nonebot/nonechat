@@ -1,5 +1,5 @@
+from typing import overload
 from abc import ABC, abstractmethod
-from typing import Union, Optional, overload
 from collections.abc import Iterator, Sequence
 from dataclasses import field, asdict, dataclass
 
@@ -16,7 +16,7 @@ from rich.console import Console, RenderResult, JustifyMethod, ConsoleOptions
 class Element(ABC):
     @property
     @abstractmethod
-    def rich(self) -> Union[RichText, RichEmoji, RichMarkdown]:
+    def rich(self) -> RichText | RichEmoji | RichMarkdown:
         pass
 
     def __str__(self) -> str:
@@ -59,9 +59,9 @@ class Emoji(Element):
 @dataclass
 class Markup(Element):
     markup: str
-    style: Union[str, Style] = field(default="none")
+    style: str | Style = field(default="none")
     emoji: bool = field(default=True)
-    emoji_variant: Optional[EmojiVariant] = field(default=None)
+    emoji_variant: EmojiVariant | None = field(default=None)
 
     @property
     def rich(self) -> RichText:
@@ -78,11 +78,11 @@ class Markup(Element):
 class Markdown(Element):
     markup: str
     code_theme: str = field(default="monokai")
-    justify: Optional[JustifyMethod] = field(default=None)
-    style: Union[str, Style] = field(default="none")
+    justify: JustifyMethod | None = field(default=None)
+    style: str | Style = field(default="none")
     hyperlinks: bool = field(default=True)
-    inline_code_lexer: Optional[str] = field(default=None)
-    inline_code_theme: Optional[str] = field(default=None)
+    inline_code_lexer: str | None = field(default=None)
+    inline_code_theme: str | None = field(default=None)
 
     @property
     def rich(self) -> RichMarkdown:
@@ -105,7 +105,7 @@ class ConsoleMessage(Sequence[Element]):
     @overload
     def __getitem__(self, index: slice) -> Sequence[Element]: ...
 
-    def __getitem__(self, index: Union[int, slice]) -> Union[Element, Sequence[Element]]:
+    def __getitem__(self, index: int | slice) -> Element | Sequence[Element]:
         return self.content[index]
 
     def __len__(self) -> int:

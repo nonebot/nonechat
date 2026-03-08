@@ -131,10 +131,10 @@ class MessageInfo(Widget):
     }
     """
 
-    def __init__(self, nickname: str, renderable: RenderableType, side: Side):
+    def __init__(self, nickname: str, content: RenderableType, side: Side):
         super().__init__(classes="left" if side == Side.LEFT else "right")
         self.nickname = truncate(nickname, 20)
-        self.bubble = BubbleWrapper(renderable, side)
+        self.bubble = BubbleWrapper(content, side)
 
     def compose(self):
         yield Static(self.nickname)
@@ -156,9 +156,9 @@ class BubbleWrapper(Widget):
     }
     """
 
-    def __init__(self, renderable: RenderableType, side: Side):
+    def __init__(self, content: RenderableType, side: Side):
         super().__init__(classes="left" if side == Side.LEFT else "right")
-        self.content = renderable
+        self.content = content
 
     def compose(self):
         yield Bubble(self.content)
@@ -180,9 +180,9 @@ class Bubble(Widget):
     }
     """
 
-    def __init__(self, renderable: RenderableType):
+    def __init__(self, content: RenderableType):
         super().__init__()
-        self.content = renderable
+        self.content = content
 
     def render(self):
         return self.content

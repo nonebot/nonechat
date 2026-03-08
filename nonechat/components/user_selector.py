@@ -1,6 +1,6 @@
 import random
 import string
-from typing import TYPE_CHECKING, Optional, cast
+from typing import TYPE_CHECKING, cast
 
 from textual.widget import Widget
 from textual.message import Message
@@ -22,11 +22,11 @@ class UserSelectorPressed(Message):
 
 
 class _store:
-    _current_user: Optional[User] = None
-    _current_bot: Optional[Robot] = None
+    _current_user: User | None = None
+    _current_bot: Robot | None = None
 
     @classmethod
-    def get_current_user(cls, is_bot_mode: bool) -> Optional[User]:
+    def get_current_user(cls, is_bot_mode: bool) -> User | None:
         return cls._current_bot if is_bot_mode else cls._current_user
 
     @classmethod

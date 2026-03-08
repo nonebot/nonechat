@@ -1,4 +1,4 @@
-from typing import Callable, Optional
+from collections.abc import Callable
 
 from textual.widget import Widget
 from textual.message import Message
@@ -19,14 +19,14 @@ class RouterView(Widget):
     }
     """
 
-    current_route = Reactive[Optional[str]](None)
+    current_route = Reactive[str | None](None)
 
     def __init__(self, routes: dict[str, Callable[[], Widget]], default_route: str):
         super().__init__()
         self.routes = routes
         self.default_route = default_route
 
-        self.current_view: Optional[Widget] = None
+        self.current_view: Widget | None = None
 
     async def on_mount(self):
         self.current_route = self.default_route

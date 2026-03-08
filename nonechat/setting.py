@@ -1,5 +1,4 @@
 from warnings import warn
-from typing import Optional
 from dataclasses import dataclass
 
 from textual.color import Color
@@ -9,15 +8,15 @@ from textual.color import Color
 class ConsoleSetting:
     title: str = "Console"
     sub_title: str = "powered by Textual"
-    room_title: Optional[str] = None
-    title_color: Optional[Color] = None
-    icon: Optional[str] = None
-    icon_color: Optional[Color] = None
+    room_title: str | None = None
+    title_color: Color | None = None
+    icon: str | None = None
+    icon_color: Color | None = None
 
-    bg_color: Optional[Color] = None
-    header_color: Optional[Color] = None
-    dark_bg_color: Optional[Color] = None
-    dark_header_color: Optional[Color] = None
+    bg_color: Color | None = None
+    header_color: Color | None = None
+    dark_bg_color: Color | None = None
+    dark_header_color: Color | None = None
 
     toolbar_exit: str = "⛔"
     toolbar_clear: str = "🗑️"

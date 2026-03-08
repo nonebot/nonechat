@@ -2,7 +2,7 @@ import sys
 import contextlib
 from datetime import datetime
 from typing_extensions import TypeVar
-from typing import Union, TextIO, Generic, Optional, cast
+from typing import TextIO, Generic, cast
 
 from textual.app import App
 from textual.widget import Widget
@@ -52,8 +52,8 @@ class Frontend(App, Generic[TB]):
         self._fake_output = cast(TextIO, FakeIO(self.log_store))
         self._origin_stdout = sys.stdout
         self._origin_stderr = sys.stderr
-        self._textual_stdout: Optional[TextIO] = None
-        self._textual_stderr: Optional[TextIO] = None
+        self._textual_stdout: TextIO | None = None
+        self._textual_stderr: TextIO | None = None
         self.backend: TB = backend(self)
 
         # Bot 模式状态
@@ -95,8 +95,8 @@ class Frontend(App, Generic[TB]):
     async def send_message(
         self,
         content: ConsoleMessage,
-        channel: Union[Channel, None] = None,
-        bot: Union[Robot, None] = None,
+        channel: Channel | None = None,
+        bot: Robot | None = None,
     ):
         """发送消息到当前频道或指定频道"""
         target = channel or self.backend.current_channel
@@ -135,14 +135,12 @@ class Frontend(App, Generic[TB]):
         await self.backend.add_channel(message.channel)
         return await self.backend.write_chat(message, message.channel)
 
-    async def recall_message(self, message_id: str, channel: Union[Channel, None] = None):
+    async def recall_message(self, message_id: str, channel: Channel | None = None):
         """撤回消息"""
         channel = channel or self.backend.current_channel
         return await self.backend.remove_chat(message_id, channel)
 
-    async def edit_message(
-        self, message_id: str, content: ConsoleMessage, channel: Union[Channel, None] = None
-    ):
+    async def edit_message(self, message_id: str, content: ConsoleMessage, channel: Channel | None = None):
         """编辑消息"""
         channel = channel or self.backend.current_channel
         return await self.backend.edit_chat(message_id, content, channel)

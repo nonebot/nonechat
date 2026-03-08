@@ -60,7 +60,6 @@ app = Frontend(
     ConsoleSetting(
         title="Multi-User Chat",
         sub_title="支持多用户和频道的聊天应用",
-        room_title="聊天室",
         icon="💻",  # 浅色模式背景色
         dark_bg_color=Color(40, 44, 52),  # 暗色模式背景色 (更深一些)
         title_color=Color(229, 192, 123),
@@ -87,15 +86,13 @@ async def on_message(event: MessageEvent):
             ConsoleMessage([Text(f"当前频道: {channel_name}\n当前用户: {user_name}")]), event.channel
         )
     elif message_text == "help":
-        help_text = cleandoc(
-            """
+        help_text = cleandoc("""
             🤖 可用命令:
             - ping - 测试连接
             - inspect - 查看当前频道和用户
             - help - 显示帮助
             - broadcast - 向所有用户发送消息
-            """
-        )
+            """)
         await app.send_message(ConsoleMessage([Markdown(help_text)]), event.channel)
     elif message_text == "broadcast":
         for user in await app.backend.list_users():
@@ -141,17 +138,11 @@ async def on_message(event: MessageEvent):
         # 在不同频道中有不同的回复
         channel_name = app.backend.current_channel.name
         if "技术" in channel_name:
-            await app.send_message(
-                ConsoleMessage([Text(f"💻 在{channel_name}中讨论技术话题很有趣!")]), event.channel
-            )
+            await app.send_message(ConsoleMessage([Text(f"💻 在{channel_name}中讨论技术话题很有趣!")]), event.channel)
         elif "游戏" in channel_name:
-            await app.send_message(
-                ConsoleMessage([Text(f"🎮 {channel_name}中有什么好玩的游戏推荐吗?")]), event.channel
-            )
+            await app.send_message(ConsoleMessage([Text(f"🎮 {channel_name}中有什么好玩的游戏推荐吗?")]), event.channel)
         else:
-            await app.send_message(
-                ConsoleMessage([Text(f"😊 在{channel_name}中收到了你的消息")]), event.channel
-            )
+            await app.send_message(ConsoleMessage([Text(f"😊 在{channel_name}中收到了你的消息")]), event.channel)
 
 
 if __name__ == "__main__":

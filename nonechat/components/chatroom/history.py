@@ -1,6 +1,6 @@
 from collections.abc import Iterable
+from typing import TYPE_CHECKING, cast
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Optional, cast
 
 from textual.widget import Widget
 
@@ -26,8 +26,8 @@ class ChatHistory(Widget):
 
     def __init__(self):
         super().__init__()
-        self.last_msg: Optional[MessageEvent] = None
-        self.last_time: Optional[datetime] = None
+        self.last_msg: MessageEvent | None = None
+        self.last_time: datetime | None = None
         self.is_bot_mode = self.app.is_bot_mode
 
     @property
@@ -77,7 +77,7 @@ class ChatHistory(Widget):
             await cast(Widget, msg).remove()
         await self.app.backend.clear_chat_history()
 
-    async def refresh_history(self, channel: "Optional[Channel]" = None):
+    async def refresh_history(self, channel: "Channel | None" = None):
         """刷新聊天历史记录显示"""
         # 清除当前显示的消息
         self.last_msg = None
